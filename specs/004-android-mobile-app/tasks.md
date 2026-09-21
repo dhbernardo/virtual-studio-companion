@@ -1,7 +1,7 @@
 # Desglose de Tareas: 004-android-mobile-app
 
 ## Fase 1: Integración de ML Kit, Escaneo Óptico y Permisos
-- [ ] **T01: Pruebas unitarias para el analizador de código QR con ML Kit**  
+- [x] **T01: Pruebas unitarias para el analizador de código QR con ML Kit**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`  
   *Hecho cuando:* `androidApp/src/test/.../QrCodeImageAnalyzerTest.kt` valide que al recibir un Barcode con valor `vcam://pair?...` se extraigan los datos y se invoque el callback con la configuración correcta.
 - [ ] **T02: Implementación de `QrCodeImageAnalyzer`, `QrScannerScreen` y `PermissionScreen`**  
