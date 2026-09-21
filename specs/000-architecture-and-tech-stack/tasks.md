@@ -23,7 +23,7 @@
 - [x] **T05: Configuración base de `androidApp/build.gradle.kts` con Desugaring y build Debug**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RF-003`, Constitución Principio 7  
   *Hecho cuando:* `androidApp` configure `compileSdk = 34`, `minSdk = 26`, `targetSdk = 34`, `coreLibraryDesugaring`, dependa de `project(":shared")` y la ejecución de `./gradlew :androidApp:assembleDebug` genere exitosamente el APK sin requerir certificados de producción.
-- [ ] **T06: Configuración de `desktopApp/build.gradle.kts` como KMP (`jvm("desktop")`)**  
+- [x] **T06: Configuración de `desktopApp/build.gradle.kts` como KMP (`jvm("desktop")`)**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RNF-003`  
   *Hecho cuando:* `desktopApp` se configure como módulo KMP con target `jvm("desktop")`, código en `src/desktopMain/kotlin`, dependa de `project(":shared")`, configure `compose.desktop { application { mainClass = "MainKt" } }` y arranque una ventana nativa de prueba.
 
