@@ -20,7 +20,7 @@
   *Hecho cuando:* `shared/build.gradle.kts` configure `compose.components.resources` con `publicResClass = true` y paquete canónico `com.vcompanion.shared.resources`, existan directorios para `values/strings.xml`, `drawable/` y `font/`, y la compilación genere exitosamente `Res.string.*` utilizable desde cualquier módulo.
 
 ## Fase 3: Configuración de los Módulos de Plataforma
-- [ ] **T05: Configuración base de `androidApp/build.gradle.kts` con Desugaring y build Debug**  
+- [x] **T05: Configuración base de `androidApp/build.gradle.kts` con Desugaring y build Debug**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RF-003`, Constitución Principio 7  
   *Hecho cuando:* `androidApp` configure `compileSdk = 34`, `minSdk = 26`, `targetSdk = 34`, `coreLibraryDesugaring`, dependa de `project(":shared")` y la ejecución de `./gradlew :androidApp:assembleDebug` genere exitosamente el APK sin requerir certificados de producción.
 - [ ] **T06: Configuración de `desktopApp/build.gradle.kts` como KMP (`jvm("desktop")`)**  
