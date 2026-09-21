@@ -11,3 +11,27 @@ plugins {
 tasks.register("clean", Delete::class) {
     delete(rootProject.layout.buildDirectory)
 }
+
+tasks.register("allTests") {
+    group = "verification"
+    description = "Coordina en paralelo todas las pruebas unitarias disponibles del ecosistema KMP."
+
+    dependsOn(
+        ":shared:desktopTest",
+        ":desktopApp:desktopTest"
+    )
+
+    val hasAndroidSdk = providers.environmentVariable("ANDROID_HOME").isPresent ||
+            providers.environmentVariable("ANDROID_SDK_ROOT").isPresent ||
+            rootProject.file("local.properties").let { file ->
+                file.exists() && file.readLines().any { it.trim().startsWith("sdk.dir") }
+            }
+
+    if (hasAndroidSdk) {
+        dependsOn(
+            ":shared:testDebugUnitTest",
+            ":androidApp:testDebugUnitTest"
+        )
+    }
+}
+

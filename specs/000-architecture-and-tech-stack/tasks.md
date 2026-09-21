@@ -28,6 +28,6 @@
   *Hecho cuando:* `desktopApp` se configure como módulo KMP con target `jvm("desktop")`, código en `src/desktopMain/kotlin`, dependa de `project(":shared")`, configure `compose.desktop { application { mainClass = "MainKt" } }` y arranque una ventana nativa de prueba.
 
 ## Fase 4: Orquestación de Pruebas Globales
-- [ ] **T07: Registro de la tarea coordinadora `allTests`**  
+- [x] **T07: Registro de la tarea coordinadora `allTests`**  
   *Requisitos cubiertos:* `RF-004`  
   *Hecho cuando:* La ejecución de `./gradlew allTests` coordine en paralelo las suites de pruebas (`:shared:desktopTest`, `:desktopApp:desktopTest` y opcionalmente suites de Android si está presente el SDK), soportando `--continue` para reportes consolidados.
