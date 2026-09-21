@@ -42,7 +42,8 @@ fun MainWindow(
                     StreamingDashboardView(
                         state = state,
                         onSendCommand = { viewModel.sendCommand(it) },
-                        onDisconnect = { viewModel.onClose() }
+                        onDisconnect = { viewModel.disconnectSession() },
+                        onConnectObs = { viewModel.connectObs() }
                     )
                 }
             }

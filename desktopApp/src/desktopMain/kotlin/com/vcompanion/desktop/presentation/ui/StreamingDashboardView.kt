@@ -27,6 +27,7 @@ import com.vcompanion.shared.designsystem.components.StudioIndicator
 import com.vcompanion.shared.designsystem.theme.StudioTheme
 import com.vcompanion.shared.resources.Res
 import com.vcompanion.shared.resources.action_disconnect
+import com.vcompanion.shared.resources.desktop_action_connect_obs
 import com.vcompanion.shared.resources.action_switch_camera
 import com.vcompanion.shared.resources.action_toggle_torch
 import com.vcompanion.shared.resources.action_zoom_in
@@ -59,6 +60,7 @@ fun StreamingDashboardView(
     state: DesktopHostUiState,
     onSendCommand: (CameraCommand) -> Unit,
     onDisconnect: () -> Unit,
+    onConnectObs: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val colors = StudioTheme.colors
@@ -106,6 +108,22 @@ fun StreamingDashboardView(
                     style = typography.labelSmall,
                     color = colors.textSecondary
                 )
+
+                if (state.obsConnectionState != ObsConnectionState.CONNECTED) {
+                    Spacer(modifier = Modifier.width(spacing.medium))
+                    Button(
+                        onClick = onConnectObs,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.surfaceElevated,
+                            contentColor = colors.textPrimary
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.desktop_action_connect_obs),
+                            style = typography.labelSmall
+                        )
+                    }
+                }
             }
 
             Button(

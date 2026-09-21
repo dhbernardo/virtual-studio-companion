@@ -129,10 +129,13 @@ class KtorServerGateway(
                     }
                 }
             }
+        } catch (_: Exception) {
+            // Socket error or connection lost handled gracefully
         } finally {
             pingJob.cancel()
             activeSessions.remove(session)
             _connectedClientsCount.value = activeSessions.size
+            _incomingMessages.emit(ProtocolMessage.DisconnectRequest("CLIENT_CLOSED"))
         }
     }
 

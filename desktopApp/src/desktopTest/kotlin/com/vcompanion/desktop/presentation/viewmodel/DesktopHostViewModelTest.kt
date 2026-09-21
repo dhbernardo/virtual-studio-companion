@@ -328,4 +328,77 @@ class DesktopHostViewModelTest {
         assertTrue(gateway.isDisconnected)
         assertEquals(ObsConnectionState.DISCONNECTED, obs.connectionState.value)
     }
+
+    @Test
+    fun shouldTransitionToDisconnectedAndRegenerateTokenOnDisconnectSession() = runTest {
+        val gateway = FakeStreamGateway()
+        val obs = FakeObsConnector()
+
+        val viewModel = DesktopHostViewModel(
+            gateway = gateway,
+            obsConnector = obs,
+            hostIp = "192.168.1.50",
+            effectivePort = 8080,
+            coroutineScope = backgroundScope,
+            tickerDispatcher = StandardTestDispatcher(testScheduler)
+        )
+
+        val initialToken = viewModel.uiState.value.sessionToken
+
+        // Connect first
+        gateway.emitIncoming(
+            ProtocolMessage.HandshakeInit(
+                clientVersion = "1.0.0",
+                deviceModel = "Pixel 7 Pro",
+                sessionToken = initialToken
+            )
+        )
+        testScheduler.runCurrent()
+        assertTrue(viewModel.uiState.value.connectionState is ConnectionState.Connected)
+
+        // Streamer clicks "Desconectar"
+        viewModel.disconnectSession()
+        testScheduler.runCurrent()
+
+        assertTrue(gateway.sentMessages.any { it is ProtocolMessage.DisconnectRequest && it.reason == "HOST_DISCONNECT" })
+        assertEquals(ConnectionState.Disconnected, viewModel.uiState.value.connectionState)
+        assertNotEquals(initialToken, viewModel.uiState.value.sessionToken)
+        assertEquals(120, viewModel.uiState.value.tokenRemainingSeconds)
+    }
+
+    @Test
+    fun shouldTransitionToDisconnectedWhenClientDisconnects() = runTest {
+        val gateway = FakeStreamGateway()
+        val obs = FakeObsConnector()
+
+        val viewModel = DesktopHostViewModel(
+            gateway = gateway,
+            obsConnector = obs,
+            hostIp = "192.168.1.50",
+            effectivePort = 8080,
+            coroutineScope = backgroundScope,
+            tickerDispatcher = StandardTestDispatcher(testScheduler)
+        )
+
+        val initialToken = viewModel.uiState.value.sessionToken
+
+        // Connect first
+        gateway.emitIncoming(
+            ProtocolMessage.HandshakeInit(
+                clientVersion = "1.0.0",
+                deviceModel = "Pixel 7 Pro",
+                sessionToken = initialToken
+            )
+        )
+        testScheduler.runCurrent()
+        assertTrue(viewModel.uiState.value.connectionState is ConnectionState.Connected)
+
+        // Client socket closes or disconnects
+        gateway.emitIncoming(ProtocolMessage.DisconnectRequest("CLIENT_CLOSED"))
+        testScheduler.runCurrent()
+
+        assertEquals(ConnectionState.Disconnected, viewModel.uiState.value.connectionState)
+        assertNotEquals(initialToken, viewModel.uiState.value.sessionToken)
+        assertEquals(120, viewModel.uiState.value.tokenRemainingSeconds)
+    }
 }

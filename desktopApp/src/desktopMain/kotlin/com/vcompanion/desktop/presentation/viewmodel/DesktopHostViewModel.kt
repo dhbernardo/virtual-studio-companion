@@ -193,13 +193,27 @@ class DesktopHostViewModel(
             }
 
             is ProtocolMessage.DisconnectRequest -> {
-                _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
-                generateNewToken()
+                if (_uiState.value.connectionState !is ConnectionState.Disconnected) {
+                    _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+                    generateNewToken()
+                    startTicker()
+                }
             }
 
             else -> {
                 // Ignore other messages
             }
+        }
+    }
+
+    fun disconnectSession() {
+        coroutineScope.launch {
+            if (_uiState.value.connectionState is ConnectionState.Connected || _uiState.value.connectionState is ConnectionState.Streaming) {
+                gateway.sendMessage(ProtocolMessage.DisconnectRequest("HOST_DISCONNECT"))
+            }
+            _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
+            generateNewToken()
+            startTicker()
         }
     }
 
