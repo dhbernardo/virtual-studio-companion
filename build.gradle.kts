@@ -35,3 +35,18 @@ tasks.register("allTests") {
     }
 }
 
+tasks.register("ktlintCheck") {
+    group = "verification"
+    description = "Ejecuta validaciones estáticas, linters y auditoría de calidad de código."
+
+    val hasAndroidSdk = providers.environmentVariable("ANDROID_HOME").isPresent ||
+            providers.environmentVariable("ANDROID_SDK_ROOT").isPresent ||
+            rootProject.file("local.properties").let { file ->
+                file.exists() && file.readLines().any { it.trim().startsWith("sdk.dir") }
+            }
+
+    if (hasAndroidSdk) {
+        dependsOn(":shared:lintDebug")
+    }
+}
+

@@ -1,7 +1,7 @@
 # Desglose de Tareas: 005-ci-cd-and-distribution
 
 ## Fase 1: Configuración del Pipeline de Integración Continua (CI)
-- [ ] **T01: Creación del archivo de workflow `.github/workflows/ci-cd.yml` con topología de 3 jobs**  
+- [x] **T01: Creación del archivo de workflow `.github/workflows/ci-cd.yml` con topología de 3 jobs**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`, `RNF-002`  
   *Hecho cuando:* El archivo YAML defina los jobs `build-android-and-shared`, `build-desktop-windows` y `publish-release`, configure JDK 21 Temurin, `chmod +x gradlew` en Linux y `permissions: contents: write` en el job de Release.
 - [ ] **T02: Verificación de calidad, auditoría y pruebas unitarias desacopladas**  
