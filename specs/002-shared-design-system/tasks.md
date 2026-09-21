@@ -21,7 +21,7 @@
 - [x] **T05: Implementación de `TelemetryPill` con tokens semánticos reactivos**  
   *Requisitos cubiertos:* `RF-003`, `RNF-002`  
   *Hecho cuando:* `TelemetryPill` consuma `StudioTheme.colors.*` dinámicamente y muestre placeholders ante métricas nulas o pendientes.
-- [ ] **T06: Implementación de `StudioIndicator` y `StudioCounterCard`**  
+- [x] **T06: Implementación de `StudioIndicator` y `StudioCounterCard`**  
   *Requisitos cubiertos:* `RF-007` (Constitución Principio 5)  
   *Hecho cuando:* `StudioIndicator` (punto luminoso pulsante) y `StudioCounterCard` (tarjeta de métricas con valor grande para dashboards) estén implementados y listos para su consumo en móvil y escritorio.
 
