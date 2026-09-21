@@ -17,6 +17,6 @@
   *Hecho cuando:* El job de Windows ejecute `./gradlew :desktopApp:packageExe`, renombre el binario a `virtual-studio-companion-setup.exe` y lo suba a los artefactos con retención de 7 días.
 
 ## Fase 3: Automatización de Releases Consolidados
-- [ ] **T05: Configuración del job consolidador `publish-release` en GitHub Releases**  
+- [x] **T05: Configuración del job consolidador `publish-release` en GitHub Releases**  
   *Requisitos cubiertos:* `RF-005`  
   *Hecho cuando:* Ante un push de tag `v*.*.*` y con ambos jobs previos exitosos, el job descargue `app-debug.apk` y `virtual-studio-companion-setup.exe`, y publique el Release formal mediante `softprops/action-gh-release@v2` con notas de versión automáticas.
