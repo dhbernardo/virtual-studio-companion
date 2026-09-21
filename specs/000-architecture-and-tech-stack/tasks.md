@@ -12,7 +12,7 @@
 - [x] **T03: Configuración de targets, pureza y dependencias en `shared/build.gradle.kts`**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RNF-001`  
   *Hecho cuando:* El archivo configure `androidTarget()` y `jvm("desktop")`, Java toolchain 21 con compatibilidad Java 17 en Android, agregando `kotlinx-coroutines-core` y `kotlinx-serialization-json` en `commonMainApi`, verificando la ausencia total de `android.*`, `java.*` y `kotlinx.cinterop.*`.
-- [ ] **T04: Creación de estructura de directorios y test base en `shared`**  
+- [x] **T04: Creación de estructura de directorios y test base en `shared`**  
   *Requisitos cubiertos:* `RF-002`, `RF-004`  
   *Hecho cuando:* Exista `shared/src/commonTest/kotlin/ArchitectureSanityTest.kt` que valide que el runner de pruebas `kotlin.test` ejecute con éxito mediante `./gradlew :shared:desktopTest`.
 - [ ] **T04b: Configuración integral de Compose Multiplatform Resources**  
