@@ -9,7 +9,7 @@
   *Hecho cuando:* El runner de Ubuntu ejecute `ktlintCheck`, `:shared:allTests` y `:androidApp:testDebugUnitTest`; y el runner de Windows ejecute `:shared:desktopTest` y `:desktopApp:desktopTest`.
 
 ## Fase 2: Automatización de Construcción y Retención de Artefactos
-- [ ] **T03: Compilación, renombrado y subida del APK de Android (`app-debug.apk`)**  
+- [x] **T03: Compilación, renombrado y subida del APK de Android (`app-debug.apk`)**  
   *Requisitos cubiertos:* `RF-003`, `RNF-002` (Constitución Principio 7)  
   *Hecho cuando:* El job de Ubuntu ejecute `./gradlew :androidApp:assembleDebug`, renombre el binario a `app-debug.apk` y lo suba a los artefactos con retención de 7 días.
 - [ ] **T04: Empaquetado, renombrado y subida del instalador Windows (`virtual-studio-companion-setup.exe`)**  
