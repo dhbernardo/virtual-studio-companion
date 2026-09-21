@@ -40,6 +40,15 @@
     <string name="qr_scanner_overlay_hint">Alinee el código QR del Host dentro del marco</string>
     <string name="qr_scanner_searching">Buscando código QR…</string>
     <string name="qr_scanner_connecting">Código detectado, conectando…</string>
+    <string name="qr_scanner_manual_entry_action">Ingresar IP manualmente</string>
+    <string name="qr_scanner_manual_dialog_title">Conexión Manual al Host</string>
+    <string name="qr_scanner_manual_host_label">Dirección IP (ej. 192.168.1.121)</string>
+    <string name="qr_scanner_manual_port_label">Puerto (ej. 8080)</string>
+    <string name="qr_scanner_manual_token_label">Token de Emparejamiento</string>
+    <string name="qr_scanner_manual_connect_button">Conectar</string>
+    <string name="qr_scanner_manual_cancel_button">Cancelar</string>
+    <string name="qr_scanner_manual_error_invalid">Parámetros de conexión inválidos</string>
+    <string name="qr_scanner_status_error">Error en escáner de visión</string>
 
     <!-- Permisos de Cámara (RNF-003, Principio 8) -->
     <string name="permission_camera_title">Permiso de Cámara Requerido</string>

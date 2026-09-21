@@ -5,6 +5,7 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.barcode.BarcodeScanner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
@@ -14,7 +15,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class QrCodeImageAnalyzer(
     private val parseUseCase: ParsePairingPayloadUseCase = ParsePairingPayloadUseCase(),
-    private val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(),
+    private val barcodeScanner: BarcodeScanner = BarcodeScanning.getClient(
+        BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_QR_CODE)
+            .build()
+    ),
+    private val onScanFailure: ((Exception) -> Unit)? = null,
     private val onQrCodeScanned: (PairingConfig) -> Unit
 ) : ImageAnalysis.Analyzer {
 
@@ -60,6 +66,9 @@ class QrCodeImageAnalyzer(
             barcodeScanner.process(inputImage)
                 .addOnSuccessListener { barcodes ->
                     processBarcodes(barcodes)
+                }
+                .addOnFailureListener { exception ->
+                    onScanFailure?.invoke(exception)
                 }
                 .addOnCompleteListener {
                     imageProxy.close()

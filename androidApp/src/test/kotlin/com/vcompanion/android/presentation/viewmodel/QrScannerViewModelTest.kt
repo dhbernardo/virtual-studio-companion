@@ -91,4 +91,56 @@ class QrScannerViewModelTest {
         assertTrue(state.isScanning)
         assertNull(state.scannedConfig)
     }
+
+    @Test
+    fun shouldSetErrorMessageWhenScanErrorOccurs() {
+        val viewModel = QrScannerViewModel()
+        viewModel.onScanError("Model downloading")
+
+        assertEquals("Model downloading", viewModel.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun shouldToggleManualEntryDialogVisibility() {
+        val viewModel = QrScannerViewModel()
+        assertFalse(viewModel.uiState.value.isManualEntryDialogVisible)
+
+        viewModel.setManualEntryDialogVisible(true)
+        assertTrue(viewModel.uiState.value.isManualEntryDialogVisible)
+
+        viewModel.setManualEntryDialogVisible(false)
+        assertFalse(viewModel.uiState.value.isManualEntryDialogVisible)
+    }
+
+    @Test
+    fun shouldValidateAndSetPairingConfigOnManualEntry() {
+        val viewModel = QrScannerViewModel()
+        viewModel.setManualEntryDialogVisible(true)
+
+        val success = viewModel.onManualPairingConfig(
+            host = " 192.168.1.121 ",
+            portStr = "8080",
+            token = " abcdef123 "
+        )
+
+        assertTrue(success)
+        val state = viewModel.uiState.value
+        assertFalse(state.isScanning)
+        assertFalse(state.isManualEntryDialogVisible)
+        assertEquals("192.168.1.121", state.scannedConfig?.host)
+        assertEquals(8080, state.scannedConfig?.port)
+        assertEquals("abcdef123", state.scannedConfig?.sessionToken)
+    }
+
+    @Test
+    fun shouldRejectInvalidParametersOnManualEntry() {
+        val viewModel = QrScannerViewModel()
+
+        assertFalse(viewModel.onManualPairingConfig("", "8080", "tok"))
+        assertFalse(viewModel.onManualPairingConfig("192.168.1.1", "invalid_port", "tok"))
+        assertFalse(viewModel.onManualPairingConfig("192.168.1.1", "-1", "tok"))
+        assertFalse(viewModel.onManualPairingConfig("192.168.1.1", "70000", "tok"))
+        assertFalse(viewModel.onManualPairingConfig("192.168.1.1", "8080", "   "))
+        assertNull(viewModel.uiState.value.scannedConfig)
+    }
 }

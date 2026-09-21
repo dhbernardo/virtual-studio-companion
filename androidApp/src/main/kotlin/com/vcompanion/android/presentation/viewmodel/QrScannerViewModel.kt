@@ -11,7 +11,9 @@ data class QrScannerUiState(
     val isScanning: Boolean = true,
     val isPermissionGranted: Boolean = false,
     val isPermanentlyDenied: Boolean = false,
-    val scannedConfig: PairingConfig? = null
+    val scannedConfig: PairingConfig? = null,
+    val errorMessage: String? = null,
+    val isManualEntryDialogVisible: Boolean = false
 )
 
 class QrScannerViewModel : ViewModel() {
@@ -32,16 +34,56 @@ class QrScannerViewModel : ViewModel() {
         _uiState.update { current ->
             current.copy(
                 isScanning = false,
-                scannedConfig = config
+                scannedConfig = config,
+                errorMessage = null
             )
         }
+    }
+
+    fun onScanError(message: String) {
+        _uiState.update { current ->
+            current.copy(errorMessage = message)
+        }
+    }
+
+    fun setManualEntryDialogVisible(visible: Boolean) {
+        _uiState.update { current ->
+            current.copy(isManualEntryDialogVisible = visible)
+        }
+    }
+
+    fun onManualPairingConfig(host: String, portStr: String, token: String): Boolean {
+        val cleanHost = host.trim()
+        val port = portStr.trim().toIntOrNull()
+        val cleanToken = token.trim()
+
+        if (cleanHost.isBlank() || port == null || port <= 0 || port > 65535 || cleanToken.isBlank()) {
+            return false
+        }
+
+        val config = PairingConfig(
+            host = cleanHost,
+            port = port,
+            sessionToken = cleanToken
+        )
+
+        _uiState.update { current ->
+            current.copy(
+                isScanning = false,
+                scannedConfig = config,
+                isManualEntryDialogVisible = false,
+                errorMessage = null
+            )
+        }
+        return true
     }
 
     fun resetScanning() {
         _uiState.update { current ->
             current.copy(
                 isScanning = true,
-                scannedConfig = null
+                scannedConfig = null,
+                errorMessage = null
             )
         }
     }

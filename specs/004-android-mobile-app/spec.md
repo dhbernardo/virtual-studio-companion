@@ -9,11 +9,14 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
 
 ### RF-001: Escáner Óptico de Código QR con ML Kit
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el usuario apunte la cámara hacia el Código QR expuesto por el Host en Windows, el analizador de frames de ML Kit DEBE extraer la URI de conexión (`vcam://pair?...`), validar el esquema mediante `ParsePairingPayloadUseCase` e iniciar la conexión automática sin intervención manual.
+- **Definición:** CUANDO el usuario apunte la cámara hacia el Código QR expuesto por el Host en Windows, el analizador de frames de ML Kit DEBE extraer la URI de conexión (`vcam://pair?...`), empleando un cliente optimizado específicamente para `Barcode.FORMAT_QR_CODE`, con declaración explícita de descarga de dependencias en `AndroidManifest.xml` (`com.google.mlkit.vision.DEPENDENCIES = barcode`), validar el esquema mediante `ParsePairingPayloadUseCase` e iniciar la conexión automática sin intervención manual.
 - **Criterio de Aceptación:**
   - **DADO QUE** se detecta un QR válido en el encuadre
   - **CUANDO** ML Kit extrae la cadena
   - **ENTONCES** debe invocar `ParsePairingPayloadUseCase`, pasar la configuración al ViewModel y transitar a la pantalla de transmisión en menos de 300 ms tras la detección.
+  - **DADO QUE** el analizador de ML Kit reporta una falla interna o el modelo no está listo
+  - **CUANDO** se invoca el listener de falla
+  - **ENTONCES** debe propagar el estado de error al ViewModel para advertir al usuario sin colapsar el pipeline de análisis ni cerrar prematuramente el ejecutor.
 
 ### RF-002: Pipeline de Captura y Codificación de Video por Hardware
 - **Tipo:** Ubiquitous
@@ -56,6 +59,17 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **DADO QUE** la app pasa a segundo plano (ej. llamada telefónica entrante)
   - **CUANDO** se suspende temporalmente el Activity
   - **ENTONCES** debe pausar el flujo de video y notificar al Host para transitar a `RECONNECTING` sin abortar bruscamente la conexión de red.
+
+### RF-006: Fallback de Emparejamiento Manual por IP y Token
+- **Tipo:** User-driven
+- **Definición:** CUANDO el usuario experimente dificultades ópticas (reflejos, cámara dañada o condiciones de iluminación deficientes), la interfaz DEBE permitir la apertura de un diálogo modal para ingresar directamente la dirección IP del Host, puerto y token de sesión, validándolos y conectando de forma equivalente al escaneo del QR.
+- **Criterio de Aceptación:**
+  - **DADO QUE** el usuario se encuentra en la pantalla de escaneo
+  - **CUANDO** pulsa la acción de ingreso manual
+  - **ENTONCES** debe desplegar un diálogo con campos para IP, puerto y token, consumiendo todos sus textos de `Res.string.*`.
+  - **DADO QUE** el usuario introduce parámetros válidos
+  - **CUANDO** pulsa "Conectar"
+  - **ENTONCES** debe construir un `PairingConfig` y transitar inmediatamente a la pantalla de transmisión.
 
 ---
 

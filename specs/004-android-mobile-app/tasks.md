@@ -26,3 +26,10 @@
 - [x] **T07: Implementación de `CameraScreen` con HUD de Estudio y `FLAG_KEEP_SCREEN_ON`**  
   *Requisitos cubiertos:* `RF-003`, `RF-005`, `RNF-004` (Constitución Principios 5 y 8)  
   *Hecho cuando:* La pantalla combine la vista previa con los componentes compartidos (`StudioBadge`, `TelemetryPill`, `StudioIndicator`, `CameraControlBar`), mantenga la pantalla activa durante el streaming y despache `DISCONNECT_REQUEST` al salir.
+
+## Fase 4: Optimización de Resiliencia del Escáner QR y Contingencia Manual
+- [x] **T08: Robustecimiento de ML Kit y Fallback Manual por IP/Token**  
+  *Requisitos cubiertos:* `RF-001`, `RF-006`, `RNF-001`, `RNF-004` (Constitución Principio 8)  
+  *Hecho cuando:* Se declare `com.google.mlkit.vision.DEPENDENCIES = barcode` en `AndroidManifest.xml`, `BarcodeScannerOptions` restrinja a `Barcode.FORMAT_QR_CODE` con captura de excepciones, el `cameraExecutor` no sea cerrado prematuramente ante recomposiciones en `QrScannerScreen.kt`, se ofrezca un diálogo de ingreso manual de IP/Token con strings centralizados en `Res.string.*`, y las pruebas unitarias en `QrCodeImageAnalyzerTest` y `QrScannerViewModelTest` pasen al 100%.
+
+

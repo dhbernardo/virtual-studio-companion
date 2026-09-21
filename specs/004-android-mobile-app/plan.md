@@ -63,4 +63,14 @@ graph TD
 ## 3. Estrategia de Pruebas Automatizadas
 - Pruebas unitarias de `CameraStreamViewModel` con `Turbine` y `MockK` para verificar las transiciones de estado, respuesta a comandos remotos (`SetZoom`, `ToggleTorch`) y despacho de `DISCONNECT_REQUEST`.
 - Pruebas unitarias de `KtorClientStreamAdapter` verificando la emisión inmediata de `Pong(clientTimestamp)` ante paquetes `Ping`.
-- Pruebas unitarias del analizador óptico `QrCodeImageAnalyzerTest` con URIs simuladas.
+- Pruebas unitarias del analizador óptico `QrCodeImageAnalyzerTest` con URIs simuladas, filtrado de formato `FORMAT_QR_CODE` y propagación de errores.
+- Pruebas unitarias de `QrScannerViewModelTest` validando el flujo de escaneo, estados de error y emparejamiento manual.
+
+---
+
+## 4. Resiliencia de Escaneo QR y Emparejamiento Manual
+- **Descarga de Modelo ML Kit:** Inclusión de `com.google.mlkit.vision.DEPENDENCIES = barcode` en `AndroidManifest.xml` para asegurar que Google Play Services instale el modelo inmediatamente.
+- **Optimización de Sensor y Formato:** Restricción a `Barcode.FORMAT_QR_CODE` para acelerar el procesamiento de cada fotograma de CameraX.
+- **Aislamiento de Ciclo de Vida:** Control del ciclo de vida del ejecutor en `QrScannerScreen` evitando apagados prematuros por recomposición.
+- **Fallback Manual:** Diálogo modal Compose que permite introducir `host`, `port` y `token` de forma manual consumiendo recursos de `Res.string.*`.
+
