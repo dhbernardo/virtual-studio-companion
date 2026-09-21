@@ -1,0 +1,75 @@
+# Especificación: 003-desktop-windows-host
+
+## 1. Resumen Ejecutivo
+Implementar la aplicación de escritorio nativa para Windows en el módulo `desktopApp` utilizando **Compose Multiplatform Desktop** y **Ktor Server** bajo Clean Architecture y Puertos y Adaptadores. El Host opera como el servidor local de ingesta y señalización, dibuja en pantalla el Código QR dinámico con temporizador TTL para el emparejamiento instantáneo con Android, mide la latencia RTT mediante Ping/Pong, se conecta automáticamente con **OBS Studio** mediante **OBS WebSocket API v5** creando una fuente *"Browser Source"* en la escena activa, y se empaqueta como un ejecutable `.exe` / `.msi` autocontenido mediante `jpackage` (**sin requerir Java preinstalado en el equipo del usuario**).
+
+---
+
+## 2. Requisitos Funcionales (EARS)
+
+### RF-001: Servidor Ktor Embebido, Fallback de Puertos y Gateway de Red
+- **Tipo:** Ubiquitous
+- **Definición:** El sistema DEBE levantar un servidor Ktor local embebido implementando el puerto `IStreamGateway`, intentando enlazar en el puerto por defecto `:8080` y buscando secuencialmente el siguiente puerto libre en el rango `8080-8090` ante colisiones de enlace (`BindException`), filtrando adaptadores virtuales de Windows (WSL, Hyper-V, VPN) para propagar la IP de la interfaz física activa a la URI de emparejamiento.
+- **Criterio de Aceptación:**
+  - **DADO QUE** el Host arranca en Windows
+  - **CUANDO** se inicializa el ciclo de vida del servidor
+  - **ENTONCES** debe abrir un puerto libre dentro del rango `8080-8090` y exponer los endpoints `/ws/control`, `/ws/stream` y `/stream/preview`.
+  - **DADO QUE** el puerto 8080 está ocupado por otra aplicación
+  - **CUANDO** Ktor captura la colisión
+  - **ENTONCES** debe enlazar automáticamente en el siguiente puerto disponible (ej. `:8081`) y notificar el puerto efectivo al generador del Código QR sin abortar la aplicación.
+
+### RF-002: Renderizado Visual del Código QR y Temporizador de Token
+- **Tipo:** Event-driven
+- **Definición:** CUANDO el Host no cuente con una sesión móvil activa, el sistema DEBE renderizar en la interfaz Compose Desktop un Código QR con la URI estandarizada `vcam://pair?...` generada por `GeneratePairingPayloadUseCase`, mostrando un temporizador visual de cuenta regresiva del TTL del token (120 segundos) y un botón de refresco manual.
+- **Criterio de Aceptación:**
+  - **DADO QUE** el servidor está a la espera de conexión
+  - **CUANDO** se muestra la vista de emparejamiento
+  - **ENTONCES** debe exhibir el QR renderizado, la IP física y el puerto activos legibles, y una barra/indicador con los 120 segundos de validez restante.
+  - **DADO QUE** transcurren los 120 segundos sin que el móvil complete el handshake
+  - **CUANDO** expira el temporizador
+  - **ENTONCES** debe regenerar automáticamente un nuevo token efímero y actualizar el QR sin intervención del usuario.
+  - **DADO QUE** el cliente Android completa el handshake
+  - **CUANDO** el estado transita a `CONNECTED`
+  - **ENTONCES** el QR debe ocultarse y dar paso al dashboard de telemetría y controles de cámara.
+
+### RF-003: Integración Automática con OBS Studio (OBS WebSocket API v5)
+- **Tipo:** Event-driven
+- **Definición:** CUANDO el Host detecte que OBS Studio está en ejecución (o al pulsar "Vincular con OBS"), el sistema DEBE conectarse al puerto `4455` implementando el puerto `IObsConnector`, autenticarse mediante desafío criptográfico SHA256 (si OBS tiene contraseña activada) y crear o actualizar de forma idempotente una fuente `"Browser Source"` (`inputKind = "browser_source"`) denominada `"Virtual Studio Camera"` en la escena activa.
+- **Criterio de Aceptación:**
+  - **DADO QUE** OBS Studio v5 requiere contraseña
+  - **CUANDO** se recibe la solicitud de autenticación (`GetAuthRequired` / Hello auth)
+  - **ENTONCES** debe resolver el desafío SHA256 utilizando la contraseña suministrada en la configuración de la UI y persistida localmente.
+  - **DADO QUE** la autenticación concluye con éxito
+  - **CUANDO** se inicia la transmisión
+  - **ENTONCES** debe verificar si `"Virtual Studio Camera"` existe previamente: si no existe, invocar `CreateInput`; si ya existe, invocar `SetInputSettings`, configurando la URL local (`http://localhost:<port>/stream/preview`) a 1080p y 60 FPS.
+
+### RF-004: Dashboard de Telemetría, Latencia RTT y Comandos Tipados
+- **Tipo:** Event-driven
+- **Definición:** CUANDO la transmisión esté activa, la interfaz de escritorio DEBE renderizar el dashboard utilizando los componentes compartidos `StudioCounterCard` (para FPS, bitrate y latencia RTT), `StudioBadge` (para estado de transmisión) y `StudioIndicator` (para estado del enlace con OBS), emitiendo paquetes `Ping` periódicos para medición de RTT y despachando comandos mediante la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)`.
+- **Criterio de Aceptación:**
+  - **DADO QUE** el stream está activo
+  - **CUANDO** Ktor opera el canal WebSocket
+  - **ENTONCES** debe emitir un paquete `Ping(clientTimestamp)` cada 1000 ms y computar la latencia RTT al recibir el `Pong(clientTimestamp)`, actualizando la tarjeta `StudioCounterCard` correspondiente.
+  - **DADO QUE** el streamer acciona un control en la UI de Windows (ej. alternar linterna o zoom)
+  - **CUANDO** se despacha la orden
+  - **ENTONCES** debe enviar el mensaje polimórfico tipado `{ "type": "COMMAND", "command": { "type": "TOGGLE_TORCH" } }` hacia el móvil.
+  - **DADO QUE** el usuario cierra la ventana de Windows durante una transmisión activa (`onCloseRequest`)
+  - **CUANDO** se procesa el evento de salida
+  - **ENTONCES** debe despachar inmediatamente un paquete `DISCONNECT_REQUEST` al móvil, desconectar de OBS y apagar el servidor Ktor limpiamente antes de salir del proceso.
+
+### RF-005: Distribución Autocontenida sin Java (`jpackage`)
+- **Tipo:** Ubiquitous
+- **Definición:** La tarea de distribución de Gradle DEBE invocar a `jpackage` para generar un instalador `.msi` o ejecutable `.exe` para Windows x64 que contenga su propio runtime mínimo de OpenJDK Temurin generado con `jlink`.
+- **Criterio de Aceptación:**
+  - **DADO QUE** una máquina Windows limpia no tiene instalado Java ni variables de entorno `JAVA_HOME`
+  - **CUANDO** el usuario ejecuta el instalador o ejecutable generado
+  - **ENTONCES** la aplicación debe arrancar y operar normalmente sin dependencias externas.
+
+---
+
+## 3. Requisitos No Funcionales (RNF)
+
+- **RNF-001 (Independencia de Runtime):** El artefacto de Windows no debe solicitar dependencias externas ni ejecución de comandos de instalación de Java en el sistema cliente (Constitución Principio 2).
+- **RNF-002 (Consumo Eficiente de CPU):** El Host no debe superar el 4% de uso de CPU durante el enrutamiento de paquetes de red y preview en equipos quad-core modernos.
+- **RNF-003 (Reconexión Resiliente con OBS):** Ante un reinicio o cierre imprevisto de OBS Studio, el adaptador `ObsWebSocketAdapter` debe intentar la reconexión con retroceso exponencial (*exponential backoff*) a los 2, 4 y 8 segundos sin bloquear el hilo principal de Compose Desktop.
+- **RNF-004 (Conformidad de Tema y Recursos Centralizados):** La interfaz Compose Desktop debe operar bajo `StudioTheme`, responder reactivamente a `isSystemInDarkTheme()` y consumir el 100% de cadenas mediante `Res.string.*` e iconos mediante `Res.drawable.*` (Constitución Principios 5 y 8).
