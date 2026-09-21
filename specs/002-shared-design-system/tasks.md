@@ -15,7 +15,7 @@
 - [x] **T03: Pruebas unitarias de contraste WCAG AA, formateo y mapeo de estados**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RF-003`, `RNF-003`  
   *Hecho cuando:* `shared/src/commonTest/.../DesignSystemSanityTest.kt` compruebe los ratios de contraste de las paletas, la función de mapeo `ConnectionState.toStreamStatus()` y el formateo de placeholders (`--- ms`).
-- [ ] **T04: Implementación de `StudioBadge` con pulso optimizado en `graphicsLayer`**  
+- [x] **T04: Implementación de `StudioBadge` con pulso optimizado en `graphicsLayer`**  
   *Requisitos cubiertos:* `RF-002`, `RNF-002`  
   *Hecho cuando:* El composable renderice los estados `OFFLINE`, `STANDBY`, `LIVE` y `ALERT` con animación pulsante aislada en capa gráfica a 60 FPS.
 - [ ] **T05: Implementación de `TelemetryPill` con tokens semánticos reactivos**  
