@@ -7,13 +7,16 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
 
 ## 2. Requisitos Funcionales (EARS)
 
-### RF-001: Servidor Ktor Embebido, Fallback de Puertos y Gateway de Red
+### RF-001: Servidor Ktor Embebido, Fallback de Puertos, Ingesta de Video y Gateway de Red
 - **Tipo:** Ubiquitous
-- **Definición:** El sistema DEBE levantar un servidor Ktor local embebido implementando el puerto `IStreamGateway`, intentando enlazar en el puerto por defecto `:8080` y buscando secuencialmente el siguiente puerto libre en el rango `8080-8090` ante colisiones de enlace (`BindException`), filtrando adaptadores virtuales de Windows (WSL, Hyper-V, VPN) para propagar la IP de la interfaz física activa a la URI de emparejamiento. Asimismo, el gateway DEBE monitorizar el ciclo de vida de los sockets WebSocket y emitir un evento de desconexión tipado (`DisconnectRequest("CLIENT_CLOSED")`) cuando el cliente cierre la conexión o finalice el socket de control.
+- **Definición:** El sistema DEBE levantar un servidor Ktor local embebido implementando el puerto `IStreamGateway`, intentando enlazar en el puerto por defecto `:8080` y buscando secuencialmente el siguiente puerto libre en el rango `8080-8090` ante colisiones de enlace (`BindException`), filtrando adaptadores virtuales de Windows (WSL, Hyper-V, VPN) para propagar la IP de la interfaz física activa a la URI de emparejamiento. Asimismo, el gateway DEBE monitorizar el ciclo de vida de los sockets WebSocket, emitir un evento de desconexión tipado (`DisconnectRequest("CLIENT_CLOSED")`) cuando el cliente cierre la conexión o finalice el socket de control, recibir paquetes binarios (`Frame.Binary`) en `/ws/stream` exponiéndolos a través de `incomingVideoFrames: Flow<ByteArray>`, y servir la transmisión de video continua mediante el endpoint HTTP multipart `/stream/mjpeg` (`multipart/x-mixed-replace; boundary=--frame`) consumido por `/stream/preview`.
 - **Criterio de Aceptación:**
   - **DADO QUE** el Host arranca en Windows
   - **CUANDO** se inicializa el ciclo de vida del servidor
-  - **ENTONCES** debe abrir un puerto libre dentro del rango `8080-8090` y exponer los endpoints `/ws/control`, `/ws/stream` y `/stream/preview`.
+  - **ENTONCES** debe abrir un puerto libre dentro del rango `8080-8090` y exponer los endpoints `/ws/control`, `/ws/stream`, `/stream/preview` y `/stream/mjpeg`.
+  - **DADO QUE** el cliente móvil transmite cuadros JPEG binarios en `/ws/stream`
+  - **CUANDO** Ktor recibe una trama `Frame.Binary`
+  - **ENTONCES** debe emitir los bytes a `incomingVideoFrames` y transmitirlos de forma reactiva y sin bloqueos al flujo multipart de `/stream/mjpeg`.
   - **DADO QUE** el puerto 8080 está ocupado por otra aplicación
   - **CUANDO** Ktor captura la colisión
   - **ENTONCES** debe enlazar automáticamente en el siguiente puerto disponible (ej. `:8081`) y notificar el puerto efectivo al generador del Código QR sin abortar la aplicación.
@@ -43,22 +46,31 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
   - **CUANDO** se recibe la solicitud de autenticación (`GetAuthRequired` / Hello auth)
   - **ENTONCES** debe resolver el desafío SHA256 utilizando la contraseña suministrada en la configuración de la UI y persistida localmente.
   - **DADO QUE** la autenticación concluye con éxito
-  - **CUANDO** se inicia la transmisión o se pulsa conectar en cualquier momento
-  - **ENTONCES** debe verificar si `"Virtual Studio Camera"` existe previamente: si no existe, invocar `CreateInput`; si ya existe, invocar `SetInputSettings`, configurando la URL local (`http://localhost:<port>/stream/preview`) a 1080p y 60 FPS.
+  - **CUANDO** se inicia la transmisión o se pulsa conectar en cualquier momento con sesión móvil activa (`Connected` o `Streaming`)
+  - **ENTONCES** debe verificar si `"Virtual Studio Camera"` existe previamente: si no existe, invocar `CreateInput`; si ya existe, invocar `SetInputSettings`, configurando la URL local (`http://localhost:<port>/stream/preview`) a 1080p y 60 FPS de forma automática e inmediata.
   - **DADO QUE** la sesión móvil ya está emparejada pero OBS no estaba abierto o se desconectó
-  - **CUANDO** el usuario visualiza el dashboard de transmisión
-  - **ENTONCES** la UI debe exponer el botón "Conectar OBS" para permitir el enganche con OBS sin tener que reiniciar ni desemparejar el móvil.
+  - **CUANDO** el usuario visualiza el dashboard de transmisión y pulsa "Conectar OBS"
+  - **ENTONCES** la UI debe conectarse a OBS y disparar de inmediato `setupBrowserSource` sin tener que reiniciar ni desemparejar el móvil.
 
-### RF-004: Dashboard de Telemetría, Latencia RTT, Comandos y Desconexión de Sesión
+### RF-004: Dashboard de Telemetría, Monitor Nativo Skia, Sincronización Bidireccional y Desconexión
 - **Tipo:** Event-driven
-- **Definición:** CUANDO la transmisión esté activa, la interfaz de escritorio DEBE renderizar el dashboard utilizando los componentes compartidos `StudioCounterCard` (para FPS, bitrate y latencia RTT), `StudioBadge` (para estado de transmisión) y `StudioIndicator` (para estado del enlace con OBS), emitiendo paquetes `Ping` periódicos para medición de RTT, despachando comandos mediante la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)` y permitiendo la desconexión explícita de la sesión activa retornando inmediatamente a la pantalla de emparejamiento QR con un nuevo token sin abortar la aplicación Host.
+- **Definición:** CUANDO la transmisión esté activa, la interfaz de escritorio DEBE renderizar el dashboard utilizando los componentes compartidos `StudioCounterCard` (para FPS, bitrate y latencia RTT), `StudioBadge` (para estado de transmisión), `StudioIndicator` (para estado del enlace con OBS) y un **Monitor de Retorno de Video Nativo** renderizado mediante Skia a partir de `incomingVideoFrames`. Asimismo, el sistema DEBE mantener sincronización bidireccional inmediata de controles (`ProtocolMessage.CommandPacket`) y telemetría periódica (`ProtocolMessage.TelemetryPacket`) con el móvil, emitiendo paquetes `Ping` periódicos para medición de RTT y permitiendo la desconexión explícita retornando a la pantalla de emparejamiento QR con un nuevo token sin abortar la aplicación Host.
 - **Criterio de Aceptación:**
   - **DADO QUE** el stream está activo
-  - **CUANDO** Ktor opera el canal WebSocket
-  - **ENTONCES** debe emitir un paquete `Ping(clientTimestamp)` cada 1000 ms y computar la latencia RTT al recibir el `Pong(clientTimestamp)`, actualizando la tarjeta `StudioCounterCard` correspondiente.
+  - **CUANDO** se reciben tramas en `incomingVideoFrames`
+  - **ENTONCES** el Host debe decodificar los cuadros en segundo plano mediante `org.jetbrains.skia.Image` y mostrarlos en el Monitor de Retorno en `StreamingDashboardView` con relación 16:9 y aceleración por GPU sin usar WebViews externos.
+  - **DADO QUE** el móvil transmite métricas en `ProtocolMessage.TelemetryPacket`
+  - **CUANDO** Ktor recibe el paquete de telemetría
+  - **ENTONCES** debe actualizar reactivamente los valores reales de FPS, Bitrate (Kbps) y nivel de batería en las tarjetas `StudioCounterCard`.
+  - **DADO QUE** el usuario acciona un control de cámara (zoom o linterna) en el móvil
+  - **CUANDO** el móvil despacha un `ProtocolMessage.CommandPacket`
+  - **ENTONCES** el Host debe recibir el comando y actualizar inmediatamente su estado visual (`torchEnabled`, `currentZoom`) sin rebotar el paquete de vuelta hacia el socket.
   - **DADO QUE** el streamer acciona un control en la UI de Windows (ej. alternar linterna o zoom)
-  - **CUANDO** se despacha la orden
-  - **ENTONCES** debe enviar el mensaje polimórfico tipado `{ "type": "COMMAND", "command": { "type": "TOGGLE_TORCH" } }` hacia el móvil.
+  - **CUANDO** se despacha la orden desde el Host
+  - **ENTONCES** debe actualizar su estado local y enviar `ProtocolMessage.CommandPacket` hacia el móvil.
+  - **DADO QUE** el streamer opera el canal de control
+  - **CUANDO** Ktor opera la sesión
+  - **ENTONCES** debe emitir un paquete `Ping(clientTimestamp)` cada 1000 ms y computar la latencia RTT al recibir el `Pong(clientTimestamp)`, actualizando la tarjeta `StudioCounterCard` correspondiente.
   - **DADO QUE** el usuario pulsa "Desconectar" en el dashboard de transmisión activa
   - **CUANDO** se acciona el botón
   - **ENTONCES** debe despachar `DISCONNECT_REQUEST` al móvil, transitar el estado a `Disconnected`, generar un nuevo token efímero, reactivar el temporizador de cuenta regresiva y exhibir la vista de emparejamiento QR sin cerrar la aplicación de escritorio.

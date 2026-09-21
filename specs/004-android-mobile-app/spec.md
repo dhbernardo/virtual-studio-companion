@@ -35,11 +35,11 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
 
 ### RF-002: Pipeline de Captura y Codificación de Video por Hardware
 - **Tipo:** Ubiquitous
-- **Definición:** El sistema DEBE configurar una sesión de CameraX vinculada al ciclo de vida del Activity (`ProcessCameraProvider`), seleccionando la mejor resolución disponible (preferentemente 1080p a 60 FPS o 30 FPS según el sensor), canalizando los buffers hacia el codificador por hardware (`MediaCodec` / H.264 acelerado con fallback a MJPEG) y transmitiendo paquetes binarios sobre el WebSocket de video (`/ws/stream`) ejecutándose en un hilo dedicado fuera del hilo principal.
+- **Definición:** El sistema DEBE configurar una sesión de CameraX vinculada al ciclo de vida del Activity (`ProcessCameraProvider`), seleccionando la mejor resolución disponible (preferentemente 1080p a 60 FPS o 30 FPS según el sensor), convirtiendo y comprimiendo los buffers de imagen a JPEG de alta eficiencia y baja latencia, y transmitiendo los paquetes binarios (`Frame.Binary`) sobre el WebSocket de video (`/ws/stream`) ejecutándose en un hilo dedicado fuera del hilo principal (`CameraX-Worker`), calculando en tiempo real los cuadros efectivamente despachados por segundo y la tasa de transferencia en Kbps.
 - **Criterio de Aceptación:**
   - **DADO QUE** se inicia la transmisión
   - **CUANDO** CameraX entrega buffers de imagen
-  - **ENTONCES** deben codificarse y transmitirse en un despachador de alta prioridad en segundo plano (`Dispatchers.Default` o subproceso dedicado), garantizando que la UI de Compose mantenga 60 FPS estables sin tirones (*jank*) (Regla 4 AGENTS.md).
+  - **ENTONCES** deben comprimirse a JPEG y transmitirse en un despachador de alta prioridad en segundo plano (`Dispatchers.Default` o subproceso dedicado `CameraX-Worker`), garantizando que la UI de Compose mantenga 60 FPS estables sin tirones (*jank*) (Regla 4 AGENTS.md).
 
 ### RF-003: Interfaz Profesional "Studio Camera HUD" y Pantalla Activa
 - **Tipo:** Ubiquitous
@@ -50,10 +50,13 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **ENTONCES** la vista previa debe responder con fluidez, los controles deben renderizarse nítidos con fondo traslúcido estilizado y respetar Touch Targets mínimos de 48dp.
   - **Y** el Activity debe configurar la bandera `FLAG_KEEP_SCREEN_ON` mientras la sesión esté activa, liberándola al cerrar la aplicación o retornar a `DISCONNECTED`.
 
-### RF-004: Emisión de Telemetría, Latencia RTT y Mitigación Térmica Adaptativa
+### RF-004: Emisión de Telemetría Real, Latencia RTT y Mitigación Térmica Adaptativa
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el stream esté activo, el sistema DEBE muestrear periódicamente (cada 500 ms) el nivel de batería y estado térmico con `BatteryManager` y `PowerManager` para emitir `TelemetryPacket`, responder inmediatamente con `Pong` ante paquetes `Ping` del Host para el cómputo de latencia RTT, y reducir la tasa de captura adaptativamente ante sobrecalentamiento.
+- **Definición:** CUANDO el stream esté activo, el sistema DEBE muestrear periódicamente el nivel de batería y estado térmico con `BatteryManager` y `PowerManager`, computar los FPS reales y la tasa de transferencia en Kbps generados por el codificador de cámara, y emitir periódicamente (cada 1000 ms) un paquete `ProtocolMessage.TelemetryPacket` a través de `streamGateway.sendMessage` para sincronizar los contadores del Host de Windows. Asimismo, DEBE responder inmediatamente con `Pong` ante paquetes `Ping` del Host para el cómputo de latencia RTT y reducir la tasa de captura adaptativamente ante sobrecalentamiento.
 - **Criterio de Aceptación:**
+  - **DADO QUE** la transmisión está en curso
+  - **CUANDO** transcurre la ventana de telemetría periódica (1000 ms)
+  - **ENTONCES** debe computar los FPS y Bitrate (Kbps) reales emitidos y enviar un paquete `ProtocolMessage.TelemetryPacket(timestamp, metrics)` hacia el Host para que el dashboard de escritorio exhiba métricas dinámicas vivas.
   - **DADO QUE** el canal WebSocket recibe un paquete `Ping(clientTimestamp)` del Host
   - **CUANDO** se procesa el mensaje de red
   - **ENTONCES** debe responder inmediatamente enviando `ProtocolMessage.Pong(clientTimestamp)` para permitir al Host medir la latencia RTT instantánea.
@@ -61,13 +64,16 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **CUANDO** se dispara la mitigación térmica
   - **ENTONCES** debe reducir dinámicamente la tasa de captura de 60 FPS a 30 FPS y notificar la alerta en el HUD (`StudioBadge(ALERT)`), preservando la estabilidad del terminal.
 
-### RF-005: Ejecución Reactiva de Comandos Remotos y Cierre Ordenado
+### RF-005: Ejecución Reactiva de Comandos Remotos, Sincronización Local y Cierre Ordenado
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el canal de control reciba un comando válido proveniente del Host bajo la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)`, la app móvil DEBE validar las capacidades físicas del hardware y aplicar el cambio de forma inmediata, despachando `DISCONNECT_REQUEST` ante la salida voluntaria de la pantalla o la pausa/detención del ciclo de vida del Activity (`ON_STOP`/`ON_DESTROY`), y detectando el cierre remoto del socket del Host para regresar de inmediato a la pantalla de escaneo mediante un guardián de transición que evite cierres en el montaje inicial.
+- **Definición:** CUANDO el canal de control reciba un comando válido proveniente del Host bajo la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)`, la app móvil DEBE validar las capacidades físicas del hardware y aplicar el cambio de forma inmediata. A su vez, CUANDO el usuario accione los controles locales del HUD móvil (linterna o zoom), el móvil DEBE aplicar el cambio en hardware, actualizar su estado UI y despachar inmediatamente `ProtocolMessage.CommandPacket` hacia el Host para mantener sincronizada la interfaz de Windows. Finalmente, DEBE despachar `DISCONNECT_REQUEST` ante la salida voluntaria de la pantalla o la pausa/detención del ciclo de vida del Activity (`ON_STOP`/`ON_DESTROY`), y detectar el cierre remoto del socket del Host para regresar de inmediato a la pantalla de escaneo mediante un guardián de transición que evite cierres en el montaje inicial.
 - **Criterio de Aceptación:**
-  - **DADO QUE** se recibe un paquete de comando `{ "type": "COMMAND", "command": { "type": "TOGGLE_TORCH" } }`
+  - **DADO QUE** se recibe un paquete de comando `{ "type": "COMMAND", "command": { "type": "TOGGLE_TORCH" } }` del Host
   - **CUANDO** `cameraInfo.hasFlashUnit()` confirma la presencia de flash LED
-  - **ENTONCES** debe alternar la linterna física mediante `cameraControl.enableTorch()` y reflejar el nuevo estado hacia el Host.
+  - **ENTONCES** debe alternar la linterna física mediante `cameraControl.enableTorch()` y actualizar su estado interno sin re-emitir el comando.
+  - **DADO QUE** el streamer pulsa la linterna o ajusta el zoom en la barra de controles del móvil
+  - **CUANDO** se acciona el control táctil local
+  - **ENTONCES** debe aplicar el cambio en hardware, actualizar el estado local y despachar `ProtocolMessage.CommandPacket` al Host para que el dashboard de Windows se actualice inmediatamente.
   - **DADO QUE** el usuario pulsa el botón "Finalizar Transmisión" en el HUD
   - **CUANDO** se acciona el botón
   - **ENTONCES** debe enviar un paquete `DISCONNECT_REQUEST` al Host, liberar la sesión de CameraX y navegar reactivamente de vuelta a la pantalla de escaneo QR.
