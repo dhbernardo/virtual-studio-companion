@@ -12,7 +12,7 @@
 - [x] **T03: Compilación, renombrado y subida del APK de Android (`app-debug.apk`)**  
   *Requisitos cubiertos:* `RF-003`, `RNF-002` (Constitución Principio 7)  
   *Hecho cuando:* El job de Ubuntu ejecute `./gradlew :androidApp:assembleDebug`, renombre el binario a `app-debug.apk` y lo suba a los artefactos con retención de 7 días.
-- [ ] **T04: Empaquetado, renombrado y subida del instalador Windows (`virtual-studio-companion-setup.exe`)**  
+- [x] **T04: Empaquetado, renombrado y subida del instalador Windows (`virtual-studio-companion-setup.exe`)**  
   *Requisitos cubiertos:* `RF-004`, `RNF-001` (Constitución Principio 2)  
   *Hecho cuando:* El job de Windows ejecute `./gradlew :desktopApp:packageExe`, renombre el binario a `virtual-studio-companion-setup.exe` y lo suba a los artefactos con retención de 7 días.
 

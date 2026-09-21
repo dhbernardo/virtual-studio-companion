@@ -46,13 +46,17 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.vcompanion.desktop.MainKt"
-        System.getenv("JAVA_HOME")?.takeIf { it.isNotBlank() && file(it).exists() }?.let {
-            javaHome = it
-        } ?: run {
-            val localJdk = "${System.getProperty("user.home")}/.jdks/corretto-24.0.2"
-            if (file(localJdk).exists()) {
-                javaHome = localJdk
-            }
+        val candidates = listOfNotNull(
+            "${System.getProperty("user.home")}/.jdks/corretto-24.0.2",
+            System.getenv("JAVA_HOME"),
+            System.getProperty("java.home")
+        )
+        val validJdk = candidates.firstOrNull { path ->
+            file("$path/bin/jpackage.exe").exists() || file("$path/bin/jpackage").exists()
+        } ?: System.getenv("JAVA_HOME")
+
+        if (validJdk != null) {
+            javaHome = validJdk
         }
 
         nativeDistributions {
