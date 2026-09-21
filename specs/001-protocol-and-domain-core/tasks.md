@@ -25,6 +25,6 @@
   *Hecho cuando:* `ProcessTelemetryUseCase` y `CameraCommandDispatcher` operen de forma inmutable, procesen pings RTT para latencia y aprueben las pruebas de `T05`.
 
 ## Fase 4: Integración del Core y Verificación de Rendimiento
-- [ ] **T07: Benchmark de serialización JSON en memoria (< 2 ms) y pureza**  
+- [x] **T07: Benchmark de serialización JSON en memoria (< 2 ms) y pureza**  
   *Requisitos cubiertos:* `RNF-001`, `RNF-002`, `RNF-003`  
   *Hecho cuando:* Exista un test de rendimiento que ejecute 1.000 serializaciones consecutivas comprobando un promedio inferior a 2 ms por operación, verificando la ausencia total de imports de plataforma (`android.*`, `java.*`, `kotlinx.cinterop.*`).
