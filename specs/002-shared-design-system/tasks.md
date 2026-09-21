@@ -26,7 +26,7 @@
   *Hecho cuando:* `StudioIndicator` (punto luminoso pulsante) y `StudioCounterCard` (tarjeta de métricas con valor grande para dashboards) estén implementados y listos para su consumo en móvil y escritorio.
 
 ## Fase 3: Componentes de Control de Estudio y Envoltorios
-- [ ] **T07: Implementación de `CameraControlBar` con degradación elegante de Glassmorphism**  
+- [x] **T07: Implementación de `CameraControlBar` con degradación elegante de Glassmorphism**  
   *Requisitos cubiertos:* `RF-004`, `RNF-001`  
   *Hecho cuando:* La barra aplique `Modifier.blur` en Android 12+ / Desktop y fondo translúcido sólido al 85% en Android 8.0-11, respetando Touch Targets de 48dp y estados deshabilitados.
 - [ ] **T08: Implementación de `QrCard`**  
