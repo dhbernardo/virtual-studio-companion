@@ -23,7 +23,11 @@ kotlin {
                 implementation(libs.ktor.server.core)
                 implementation(libs.ktor.server.netty)
                 implementation(libs.ktor.server.websockets)
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.okhttp)
+                implementation(libs.ktor.client.websockets)
                 implementation(libs.kotlinx.coroutines.swing)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
 
@@ -31,6 +35,9 @@ kotlin {
             dependencies {
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.mockk)
+                implementation(libs.turbine)
+                implementation(libs.ktor.server.test.host)
             }
         }
     }

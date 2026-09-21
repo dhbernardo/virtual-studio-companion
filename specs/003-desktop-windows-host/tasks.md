@@ -1,10 +1,10 @@
 # Desglose de Tareas: 003-desktop-windows-host
 
 ## Fase 1: Gateway de Servidor Local Ktor
-- [ ] **T01: Pruebas unitarias de Ktor con fallback de puertos y Ping RTT (`testApplication`)**  
+- [x] **T01: Pruebas unitarias de Ktor con fallback de puertos y Ping RTT (`testApplication`)**  
   *Requisitos cubiertos:* `RF-001`, `RF-004`, `RNF-002`  
   *Hecho cuando:* `desktopApp/src/desktopTest/.../KtorServerGatewayTest.kt` verifique el enlace secuencial en el rango 8080-8090 ante colisiones, la emisión periódica de `Ping` cada 1000 ms y la deserialización de `ProtocolMessage.CommandPacket`.
-- [ ] **T02: Implementación de `KtorServerGateway` implementando `IStreamGateway`**  
+- [x] **T02: Implementación de `KtorServerGateway` implementando `IStreamGateway`**  
   *Requisitos cubiertos:* `RF-001`, `RNF-002`  
   *Hecho cuando:* El servidor Ktor gestione conexiones concurrentes, filtre adaptadores virtuales de Windows (WSL/VPN) y pase el 100% de los tests de `T01`.
 
