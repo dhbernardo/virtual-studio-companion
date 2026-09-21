@@ -401,4 +401,73 @@ class DesktopHostViewModelTest {
         assertNotEquals(initialToken, viewModel.uiState.value.sessionToken)
         assertEquals(120, viewModel.uiState.value.tokenRemainingSeconds)
     }
+
+    @Test
+    fun shouldUpdateTorchAndZoomWhenReceivingCommandPacketFromClient() = runTest {
+        val gateway = FakeStreamGateway()
+        val obs = FakeObsConnector()
+
+        val viewModel = DesktopHostViewModel(
+            gateway = gateway,
+            obsConnector = obs,
+            hostIp = "192.168.1.50",
+            effectivePort = 8080,
+            coroutineScope = backgroundScope,
+            tickerDispatcher = StandardTestDispatcher(testScheduler)
+        )
+
+        val initialToken = viewModel.uiState.value.sessionToken
+        gateway.emitIncoming(
+            ProtocolMessage.HandshakeInit(
+                clientVersion = "1.0.0",
+                deviceModel = "Pixel 7 Pro",
+                sessionToken = initialToken
+            )
+        )
+        testScheduler.runCurrent()
+
+        // Client toggles torch
+        assertEquals(false, viewModel.uiState.value.torchEnabled)
+        gateway.emitIncoming(ProtocolMessage.CommandPacket(CameraCommand.ToggleTorch))
+        testScheduler.runCurrent()
+        assertEquals(true, viewModel.uiState.value.torchEnabled)
+
+        // Client changes zoom
+        gateway.emitIncoming(ProtocolMessage.CommandPacket(CameraCommand.SetZoom(2.5f)))
+        testScheduler.runCurrent()
+        assertEquals(2.5f, viewModel.uiState.value.currentZoom)
+    }
+
+    @Test
+    fun shouldSetupBrowserSourceWhenObsConnectsDuringActiveSession() = runTest {
+        val gateway = FakeStreamGateway()
+        val obs = FakeObsConnector()
+
+        val viewModel = DesktopHostViewModel(
+            gateway = gateway,
+            obsConnector = obs,
+            hostIp = "192.168.1.50",
+            effectivePort = 8080,
+            coroutineScope = backgroundScope,
+            tickerDispatcher = StandardTestDispatcher(testScheduler)
+        )
+
+        val initialToken = viewModel.uiState.value.sessionToken
+        gateway.emitIncoming(
+            ProtocolMessage.HandshakeInit(
+                clientVersion = "1.0.0",
+                deviceModel = "Pixel 7 Pro",
+                sessionToken = initialToken
+            )
+        )
+        testScheduler.runCurrent()
+
+        // OBS was disconnected, now connects while session is active
+        assertEquals(null, obs.lastSetupUrl)
+        obs.setState(ObsConnectionState.CONNECTED)
+        testScheduler.runCurrent()
+
+        assertEquals("http://192.168.1.50:8080/stream/preview", obs.lastSetupUrl)
+    }
 }
+

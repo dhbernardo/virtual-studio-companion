@@ -208,4 +208,41 @@ class KtorServerGatewayTest {
             client2.close()
         }
     }
+
+    @Test
+    fun shouldPropagateBinaryFramesFromStreamWebSocketToIncomingVideoFrames() = runBlocking {
+        gateway = KtorServerGateway(pingIntervalMs = 1000)
+        val port = gateway!!.start(startPort = 8086, maxPort = 8090)
+
+        val client = HttpClient {
+            install(WebSockets)
+        }
+
+        val receivedFrames = mutableListOf<ByteArray>()
+        val job = launch {
+            gateway!!.incomingVideoFrames.collect { frame ->
+                receivedFrames.add(frame)
+            }
+        }
+
+        try {
+            val sampleBytes = byteArrayOf(0xFF.toByte(), 0xD8.toByte(), 0xFF.toByte(), 0xE0.toByte(), 0x01, 0x02)
+            client.webSocket(host = "127.0.0.1", port = port, path = "/ws/stream") {
+                send(Frame.Binary(true, sampleBytes))
+                withTimeout(3000) {
+                    while (receivedFrames.isEmpty()) {
+                        kotlinx.coroutines.delay(50)
+                    }
+                }
+            }
+
+            assertTrue(receivedFrames.isNotEmpty(), "Should have received binary frame")
+            assertEquals(sampleBytes.size, receivedFrames.first().size)
+            assertTrue(sampleBytes.contentEquals(receivedFrames.first()))
+        } finally {
+            client.close()
+            job.cancel()
+        }
+    }
 }
+

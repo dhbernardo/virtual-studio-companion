@@ -21,6 +21,7 @@ fun MainWindow(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsState()
+    val videoFrame by viewModel.videoFrame.collectAsState()
 
     StudioTheme {
         Box(modifier = modifier.fillMaxSize()) {
@@ -43,7 +44,8 @@ fun MainWindow(
                         state = state,
                         onSendCommand = { viewModel.sendCommand(it) },
                         onDisconnect = { viewModel.disconnectSession() },
-                        onConnectObs = { viewModel.connectObs() }
+                        onConnectObs = { viewModel.connectObs() },
+                        videoFrame = videoFrame
                     )
                 }
             }

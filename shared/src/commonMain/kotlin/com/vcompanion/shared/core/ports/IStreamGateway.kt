@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface IStreamGateway {
     val incomingMessages: Flow<ProtocolMessage>
+    val incomingVideoFrames: Flow<ByteArray> get() = kotlinx.coroutines.flow.emptyFlow()
     suspend fun sendMessage(message: ProtocolMessage): Result<Unit>
     suspend fun disconnect()
 }

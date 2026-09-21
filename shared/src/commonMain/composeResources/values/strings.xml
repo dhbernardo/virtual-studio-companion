@@ -88,4 +88,6 @@
     <string name="desktop_camera_controls_title">Controles de Cámara</string>
     <string name="desktop_zoom_level">Zoom</string>
     <string name="desktop_default_device">Dispositivo Android</string>
+    <string name="desktop_waiting_video_signal">Esperando señal de video…</string>
+    <string name="desktop_return_monitor_title">Monitor de Retorno</string>
 </resources>

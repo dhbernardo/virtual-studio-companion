@@ -51,9 +51,18 @@ import com.vcompanion.shared.resources.telemetry_latency_unit
 import com.vcompanion.shared.resources.telemetry_placeholder
 import org.jetbrains.compose.resources.stringResource
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import com.vcompanion.shared.resources.desktop_return_monitor_title
+import com.vcompanion.shared.resources.desktop_waiting_video_signal
+
 /**
- * Dashboard de telemetría y controles remotos de cámara para Windows Host.
- * Consume [StudioCounterCard], [StudioBadge] y [StudioIndicator] (RF-004, RNF-004).
+ * Dashboard de telemetría, monitor de retorno y controles remotos de cámara para Windows Host.
+ * Consume [StudioCounterCard], [StudioBadge], [StudioIndicator] y renderizado Skia nativo (RF-004, RNF-004).
  */
 @Composable
 fun StreamingDashboardView(
@@ -61,6 +70,7 @@ fun StreamingDashboardView(
     onSendCommand: (CameraCommand) -> Unit,
     onDisconnect: () -> Unit,
     onConnectObs: () -> Unit = {},
+    videoFrame: ImageBitmap? = null,
     modifier: Modifier = Modifier
 ) {
     val colors = StudioTheme.colors
@@ -220,7 +230,42 @@ fun StreamingDashboardView(
             )
         }
 
-        Spacer(modifier = Modifier.height(spacing.large))
+        Spacer(modifier = Modifier.height(spacing.medium))
+
+        // Monitor de Retorno Nativo (Skia)
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(spacing.medium))
+                .background(colors.surfaceElevated)
+                .border(1.dp, colors.borderSubtle, RoundedCornerShape(spacing.medium)),
+            contentAlignment = Alignment.Center
+        ) {
+            if (videoFrame != null) {
+                Image(
+                    bitmap = videoFrame,
+                    contentDescription = stringResource(Res.string.desktop_return_monitor_title),
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    StudioIndicator(color = colors.standbyAccent, isPulsing = true)
+                    Spacer(modifier = Modifier.height(spacing.small))
+                    Text(
+                        text = stringResource(Res.string.desktop_waiting_video_signal),
+                        style = typography.bodyMedium,
+                        color = colors.textSecondary
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(spacing.medium))
 
         // Controles de cámara remota
         Text(

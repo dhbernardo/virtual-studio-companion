@@ -1,5 +1,7 @@
 package com.vcompanion.desktop.presentation.viewmodel
 
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import com.vcompanion.desktop.adapters.outbound.DesktopNetworkDetector
 import com.vcompanion.shared.core.domain.model.CameraCapabilities
 import com.vcompanion.shared.core.domain.model.CameraCommand
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.jetbrains.skia.Image
 import java.util.UUID
 
 /**
@@ -53,7 +56,7 @@ data class DesktopHostUiState(
 /**
  * ViewModel del Host de Windows.
  * Gestiona el ciclo de vida del servidor, regeneración de token QR con temporizador TTL (120 s),
- * despacho de comandos de cámara tipados y telemetría (RF-002, RF-004).
+ * despacho de comandos de cámara tipados, telemetría y monitor nativo Skia (RF-002, RF-004).
  */
 class DesktopHostViewModel(
     private val gateway: IStreamGateway,
@@ -82,6 +85,9 @@ class DesktopHostViewModel(
     )
     val uiState: StateFlow<DesktopHostUiState> = _uiState.asStateFlow()
 
+    private val _videoFrame = MutableStateFlow<ImageBitmap?>(null)
+    val videoFrame: StateFlow<ImageBitmap?> = _videoFrame.asStateFlow()
+
     private var currentMetadata: SessionTokenMetadata? = null
     private var tickerJob: Job? = null
 
@@ -89,6 +95,7 @@ class DesktopHostViewModel(
         generateNewToken()
         startTicker()
         observeIncomingMessages()
+        observeIncomingVideoFrames()
         observeObsState()
     }
 
@@ -187,6 +194,20 @@ class DesktopHostViewModel(
                 }
             }
 
+            is ProtocolMessage.CommandPacket -> {
+                when (val cmd = msg.command) {
+                    is CameraCommand.SetZoom -> {
+                        _uiState.update { it.copy(currentZoom = cmd.zoomRatio) }
+                    }
+                    is CameraCommand.ToggleTorch -> {
+                        _uiState.update { it.copy(torchEnabled = !it.torchEnabled) }
+                    }
+                    is CameraCommand.SwitchLens -> {
+                        // Handled if lens state is tracked
+                    }
+                }
+            }
+
             is ProtocolMessage.Pong -> {
                 val rtt = clock() - msg.clientTimestamp
                 _uiState.update { it.copy(rttLatencyMs = if (rtt >= 0) rtt else 0L) }
@@ -194,6 +215,7 @@ class DesktopHostViewModel(
 
             is ProtocolMessage.DisconnectRequest -> {
                 if (_uiState.value.connectionState !is ConnectionState.Disconnected) {
+                    _videoFrame.value = null
                     _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
                     generateNewToken()
                     startTicker()
@@ -206,11 +228,26 @@ class DesktopHostViewModel(
         }
     }
 
+    private fun observeIncomingVideoFrames() {
+        coroutineScope.launch(Dispatchers.Default) {
+            gateway.incomingVideoFrames.collect { frameBytes ->
+                try {
+                    val skiaImage = Image.makeFromEncoded(frameBytes)
+                    val composeBitmap = skiaImage.toComposeImageBitmap()
+                    _videoFrame.value = composeBitmap
+                } catch (_: Exception) {
+                    // Ignore corrupted frame
+                }
+            }
+        }
+    }
+
     fun disconnectSession() {
         coroutineScope.launch {
             if (_uiState.value.connectionState is ConnectionState.Connected || _uiState.value.connectionState is ConnectionState.Streaming) {
                 gateway.sendMessage(ProtocolMessage.DisconnectRequest("HOST_DISCONNECT"))
             }
+            _videoFrame.value = null
             _uiState.update { it.copy(connectionState = ConnectionState.Disconnected) }
             generateNewToken()
             startTicker()
@@ -221,6 +258,13 @@ class DesktopHostViewModel(
         coroutineScope.launch {
             obsConnector.connectionState.collect { obsState ->
                 _uiState.update { it.copy(obsConnectionState = obsState) }
+                if (obsState == ObsConnectionState.CONNECTED &&
+                    (_uiState.value.connectionState is ConnectionState.Connected || _uiState.value.connectionState is ConnectionState.Streaming)
+                ) {
+                    obsConnector.setupBrowserSource(
+                        previewUrl = "http://$hostIp:$effectivePort/stream/preview"
+                    )
+                }
             }
         }
     }
