@@ -1,6 +1,9 @@
 package com.vcompanion.shared
 
 import com.vcompanion.shared.domain.model.SessionConfig
+import com.vcompanion.shared.resources.Res
+import com.vcompanion.shared.resources.action_connect
+import com.vcompanion.shared.resources.app_name
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -46,5 +49,13 @@ class ArchitectureSanityTest {
     fun shouldValidatePortRangeAndSessionIntegrity() {
         val validConfig = SessionConfig("id-1", "10.0.0.1", 4444, "secret")
         assertTrue(validConfig.port in 1024..65535)
+    }
+
+    @Test
+    fun shouldExposeComposeMultiplatformResourcesPublicly() {
+        val appNameRes = Res.string.app_name
+        val connectRes = Res.string.action_connect
+        assertEquals("app_name", appNameRes.key)
+        assertEquals("action_connect", connectRes.key)
     }
 }

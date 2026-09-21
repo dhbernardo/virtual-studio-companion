@@ -15,7 +15,7 @@
 - [x] **T04: Creación de estructura de directorios y test base en `shared`**  
   *Requisitos cubiertos:* `RF-002`, `RF-004`  
   *Hecho cuando:* Exista `shared/src/commonTest/kotlin/ArchitectureSanityTest.kt` que valide que el runner de pruebas `kotlin.test` ejecute con éxito mediante `./gradlew :shared:desktopTest`.
-- [ ] **T04b: Configuración integral de Compose Multiplatform Resources**  
+- [x] **T04b: Configuración integral de Compose Multiplatform Resources**  
   *Requisitos cubiertos:* `RF-005` (Constitución Principios 5 y 8)  
   *Hecho cuando:* `shared/build.gradle.kts` configure `compose.components.resources` con `publicResClass = true` y paquete canónico `com.vcompanion.shared.resources`, existan directorios para `values/strings.xml`, `drawable/` y `font/`, y la compilación genere exitosamente `Res.string.*` utilizable desde cualquier módulo.
 

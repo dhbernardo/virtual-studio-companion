@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Virtual Studio Companion</string>
+    <string name="action_connect">Conectar</string>
+    <string name="action_disconnect">Desconectar</string>
+    <string name="status_ready">Listo</string>
+    <string name="status_streaming">Transmitiendo</string>
+    <string name="status_disconnected">Desconectado</string>
+    <string name="label_bitrate">Bitrate</string>
+    <string name="label_fps">FPS</string>
+    <string name="label_latency">Latencia</string>
+    <string name="error_connection_failed">Error al establecer la conexión con el Host</string>
+    <string name="qr_scan_instruction">Escanee el código QR desde la aplicación móvil</string>
+</resources>
