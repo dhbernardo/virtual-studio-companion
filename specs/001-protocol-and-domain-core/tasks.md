@@ -20,7 +20,7 @@
 - [x] **T05: Pruebas unitarias para serialización de `ProtocolMessage` y comandos remotos**  
   *Requisitos cubiertos:* `RF-003`, `RF-004`, `RNF-003`  
   *Hecho cuando:* Se verifique el encode/decode JSON exacto de la jerarquía sellada `ProtocolMessage` (Handshake, TelemetryPacket, Ping, Pong, Disconnect), cálculo de RTT y validación de límites de `CameraCommand.SetZoom` (1.0 a 5.0) con emisión de `CommandErrorCode`.
-- [ ] **T06: Implementación del despachador de comandos y procesador de telemetría**  
+- [x] **T06: Implementación del despachador de comandos y procesador de telemetría**  
   *Requisitos cubiertos:* `RF-003`, `RF-004`  
   *Hecho cuando:* `ProcessTelemetryUseCase` y `CameraCommandDispatcher` operen de forma inmutable, procesen pings RTT para latencia y aprueben las pruebas de `T05`.
 
