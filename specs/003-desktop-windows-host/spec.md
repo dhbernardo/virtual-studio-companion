@@ -38,19 +38,22 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
   - **CUANDO** el estado transita a `CONNECTED`
   - **ENTONCES** el QR debe ocultarse y dar paso al dashboard de telemetría y controles de cámara.
 
-### RF-003: Integración Automática con OBS Studio (OBS WebSocket API v5)
+### RF-003: Integración Automática, Control Simétrico y Resiliencia con OBS Studio (OBS WebSocket API v5)
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el Host detecte que OBS Studio está en ejecución (o al pulsar "Conectar OBS" tanto en la vista de emparejamiento como en el dashboard de transmisión activa), el sistema DEBE conectarse al puerto `4455` implementando el puerto `IObsConnector`, autenticarse mediante desafío criptográfico SHA256 (si OBS tiene contraseña activada) y crear o actualizar de forma idempotente una fuente `"Browser Source"` (`inputKind = "browser_source"`) denominada `"Virtual Studio Camera"` en la escena activa.
+- **Definición:** CUANDO el Host detecte que OBS Studio está en ejecución (o al pulsar "Conectar OBS" tanto en la vista de emparejamiento como en el dashboard de transmisión activa), el sistema DEBE conectarse al puerto `4455` implementando el puerto `IObsConnector`, autenticarse mediante desafío criptográfico SHA256 (si OBS tiene contraseña activada) y crear o actualizar de forma idempotente una fuente `"Browser Source"` (`inputKind = "browser_source"`) denominada `"Virtual Studio Camera"` en la escena activa. El canal de transporte DEBE implementar retención de mensajes (`replay = 1`) para garantizar que el mensaje de bienvenida `op: 0 (Hello)` no se descarte ante la contención de hilos producida por el streaming activo. Asimismo, el sistema DEBE permitir la desconexión explícita e independiente de OBS Studio mediante la acción "Desconectar OBS", cerrando el socket de control y transitando a `DISCONNECTED` sin alterar la sesión de streaming del teléfono móvil ni apagar el monitor de video de escritorio.
 - **Criterio de Aceptación:**
   - **DADO QUE** OBS Studio v5 requiere contraseña
   - **CUANDO** se recibe la solicitud de autenticación (`GetAuthRequired` / Hello auth)
   - **ENTONCES** debe resolver el desafío SHA256 utilizando la contraseña suministrada en la configuración de la UI y persistida localmente.
   - **DADO QUE** la autenticación concluye con éxito
   - **CUANDO** se inicia la transmisión o se pulsa conectar en cualquier momento con sesión móvil activa (`Connected` o `Streaming`)
-  - **ENTONCES** debe verificar si `"Virtual Studio Camera"` existe previamente: si no existe, invocar `CreateInput`; si ya existe, invocar `SetInputSettings`, configurando la URL local (`http://localhost:<port>/stream/preview`) a 1080p y 60 FPS de forma automática e inmediata.
+  - **ENTONCES** debe capturar el frame `op: 0 (Hello)` de forma determinista sin descarte por buffer y verificar si `"Virtual Studio Camera"` existe previamente: si no existe, invocar `CreateInput`; si ya existe, invocar `SetInputSettings`, configurando la URL local (`http://localhost:<port>/stream/preview`) a 1080p y 60 FPS de forma automática e inmediata sin incurrir en timeouts ni transitar falsamente a `OBS Error`.
   - **DADO QUE** la sesión móvil ya está emparejada pero OBS no estaba abierto o se desconectó
   - **CUANDO** el usuario visualiza el dashboard de transmisión y pulsa "Conectar OBS"
   - **ENTONCES** la UI debe conectarse a OBS y disparar de inmediato `setupBrowserSource` sin tener que reiniciar ni desemparejar el móvil.
+  - **DADO QUE** OBS Studio está conectado activamente (`ObsConnectionState.CONNECTED`)
+  - **CUANDO** el usuario pulsa "Desconectar OBS" en la vista de emparejamiento o en el dashboard
+  - **ENTONCES** el Host debe cerrar limpiamente la sesión WebSocket con OBS, cancelar los trabajos de reconexión programada y actualizar su estado a `DISCONNECTED`, preservando intacta la transmisión móvil activa y el monitor de retorno Skia.
 
 ### RF-004: Dashboard de Telemetría, Monitor Nativo Skia, Sincronización Bidireccional y Desconexión
 - **Tipo:** Event-driven
@@ -71,6 +74,9 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
   - **DADO QUE** el streamer opera el canal de control
   - **CUANDO** Ktor opera la sesión
   - **ENTONCES** debe emitir un paquete `Ping(clientTimestamp)` cada 1000 ms y computar la latencia RTT al recibir el `Pong(clientTimestamp)`, actualizando la tarjeta `StudioCounterCard` correspondiente.
+  - **DADO QUE** el estado de OBS conmuta en la UI
+  - **CUANDO** se renderiza la vista de emparejamiento o el dashboard
+  - **ENTONCES** debe mostrar contextualmente el botón "Conectar OBS" si el estado es `DISCONNECTED` o `ERROR`, o el botón "Desconectar OBS" si el estado es `CONNECTED`, manteniendo el botón general "Desconectar" reservado para la sesión móvil.
   - **DADO QUE** el usuario pulsa "Desconectar" en el dashboard de transmisión activa
   - **CUANDO** se acciona el botón
   - **ENTONCES** debe despachar `DISCONNECT_REQUEST` al móvil, transitar el estado a `Disconnected`, generar un nuevo token efímero, reactivar el temporizador de cuenta regresiva y exhibir la vista de emparejamiento QR sin cerrar la aplicación de escritorio.

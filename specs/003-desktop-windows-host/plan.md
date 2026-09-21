@@ -47,7 +47,11 @@ sequenceDiagram
         Host->>Host: Calcula RTT = now - timestamp
     end
     Host->>Streamer: Renderiza StudioCounterCard (FPS, Bitrate, RTT Latency)
-    alt Streamer desconecta sesión desde Dashboard
+    alt Streamer conecta o desconecta OBS de forma independiente
+        Streamer->>Host: Click "Conectar OBS" (connectObs) / "Desconectar OBS" (disconnectObs)
+        Host->>OBS: Handshake WS v5 (replay=1) / Cierre limpio de socket
+        Host->>Host: Actualiza obsConnectionState (CONNECTED/DISCONNECTED) preservando stream móvil
+    else Streamer desconecta sesión desde Dashboard
         Streamer->>Host: Click "Desconectar" (disconnectSession)
         Host->>Phone: DISCONNECT_REQUEST("HOST_DISCONNECT")
         Host->>Host: Transita a Disconnected, regenera token y reinicia ticker QR
