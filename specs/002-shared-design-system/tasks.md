@@ -4,7 +4,7 @@
 - [x] **T01: Definición de tokens de color Dark & Light (WCAG AA), tipografía y espaciados**  
   *Requisitos cubiertos:* `RF-001`, `RNF-003`  
   *Hecho cuando:* Se implementen `StudioDarkColors`, `StudioLightColors` (con acentos de alto contraste), `StudioTypography` y `StudioSpacing` en `shared/.../designsystem/theme/` verificando matemáticamente ratio WCAG AA > 4.5:1 en ambos modos.
-- [ ] **T02: Implementación de `StudioTheme` con persistencia mediante `ThemePreferencesRepository`**  
+- [x] **T02: Implementación de `StudioTheme` con persistencia mediante `ThemePreferencesRepository`**  
   *Requisitos cubiertos:* `RF-001`, `RF-005`, `RNF-001`  
   *Hecho cuando:* El composable `StudioTheme` evalúe `isSystemInDarkTheme()`, exponga los tokens correctos, permita alternar entre `SYSTEM`, `DARK` y `LIGHT` y persista la preferencia en el repositorio reactivo.
 - [ ] **T02b: Creación del catálogo de recursos centralizados en `composeResources`**  
