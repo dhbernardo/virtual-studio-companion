@@ -8,6 +8,7 @@ import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -34,15 +35,27 @@ class KtorServerGatewayTest {
 
     @Test
     fun shouldFallbackToNextPortWhenDefaultPortIsOccupied() = runBlocking {
-        // Occupy port 8080
-        val testPort = 8080
-        occupiedSocket = ServerSocket(testPort)
+        var targetPort = 8080
+        var socket: ServerSocket? = null
+        for (port in 8080..8085) {
+            try {
+                val s = ServerSocket()
+                s.reuseAddress = true
+                s.bind(java.net.InetSocketAddress("127.0.0.1", port))
+                socket = s
+                targetPort = port
+                break
+            } catch (_: Exception) {
+                // Port occupied, try next
+            }
+        }
+        occupiedSocket = socket
 
         gateway = KtorServerGateway(pingIntervalMs = 1000)
-        val boundPort = gateway!!.start(startPort = testPort, maxPort = 8090)
+        val boundPort = gateway!!.start(startPort = targetPort, maxPort = targetPort + 5)
 
-        assertEquals(8081, boundPort, "Should have bound to next available port 8081")
-        assertEquals(8081, gateway!!.effectivePort)
+        assertEquals(targetPort + 1, boundPort, "Should have bound to next available port")
+        assertEquals(targetPort + 1, gateway!!.effectivePort)
     }
 
     @Test
@@ -129,65 +142,73 @@ class KtorServerGatewayTest {
     @Test
     fun shouldBroadcastMessageToAllConnectedClients() = runBlocking {
         gateway = KtorServerGateway(pingIntervalMs = 5000)
-        val port = gateway!!.start(startPort = 8084, maxPort = 8090)
+        val port = gateway!!.start(startPort = 8130, maxPort = 8140)
 
-        val client = HttpClient {
-            install(WebSockets)
+        val client1 = HttpClient { install(WebSockets) }
+        val client2 = HttpClient { install(WebSockets) }
+
+        val client1Messages = java.util.concurrent.CopyOnWriteArrayList<ProtocolMessage>()
+        val client2Messages = java.util.concurrent.CopyOnWriteArrayList<ProtocolMessage>()
+
+        val job1 = launch(Dispatchers.IO) {
+            try {
+                client1.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
+                    for (frame in incoming) {
+                        if (frame is Frame.Text) {
+                            val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
+                            if (msg !is ProtocolMessage.Ping) {
+                                client1Messages.add(msg)
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // Ignore disconnect
+            }
         }
 
-        val client1Messages = mutableListOf<ProtocolMessage>()
-        val client2Messages = mutableListOf<ProtocolMessage>()
+        val job2 = launch(Dispatchers.IO) {
+            try {
+                client2.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
+                    for (frame in incoming) {
+                        if (frame is Frame.Text) {
+                            val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
+                            if (msg !is ProtocolMessage.Ping) {
+                                client2Messages.add(msg)
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // Ignore disconnect
+            }
+        }
 
         try {
-            client.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
-                val session1 = this
-                client.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
-                    val session2 = this
-
-                    val job1 = launch {
-                        for (frame in session1.incoming) {
-                            if (frame is Frame.Text) {
-                                val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
-                                if (msg !is ProtocolMessage.Ping) client1Messages.add(msg)
-                            }
-                        }
-                    }
-
-                    val job2 = launch {
-                        for (frame in session2.incoming) {
-                            if (frame is Frame.Text) {
-                                val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
-                                if (msg !is ProtocolMessage.Ping) client2Messages.add(msg)
-                            }
-                        }
-                    }
-
-                    // Wait for both sessions to register
-                    withTimeout(2000) {
-                        while (gateway!!.connectedClientsCount.value < 2) {
-                            kotlinx.coroutines.delay(50)
-                        }
-                    }
-                    assertEquals(2, gateway!!.connectedClientsCount.value)
-
-                    val ack = ProtocolMessage.HandshakeAck(serverVersion = "1.0.0", approvedFps = 60, approvedResolution = "1080p")
-                    gateway!!.sendMessage(ack)
-
-                    withTimeout(2000) {
-                        while (client1Messages.isEmpty() || client2Messages.isEmpty()) {
-                            kotlinx.coroutines.delay(50)
-                        }
-                    }
-
-                    assertEquals(ack, client1Messages.first())
-                    assertEquals(ack, client2Messages.first())
-
-                    job1.cancel()
-                    job2.cancel()
+            // Wait for both sessions to register
+            withTimeout(3000) {
+                while (gateway!!.connectedClientsCount.value < 2) {
+                    kotlinx.coroutines.delay(50)
                 }
             }
+            assertEquals(2, gateway!!.connectedClientsCount.value)
+
+            val ack = ProtocolMessage.HandshakeAck(serverVersion = "1.0.0", approvedFps = 60, approvedResolution = "1080p")
+            gateway!!.sendMessage(ack)
+
+            withTimeout(3000) {
+                while (client1Messages.isEmpty() || client2Messages.isEmpty()) {
+                    kotlinx.coroutines.delay(50)
+                }
+            }
+
+            assertEquals(ack, client1Messages.first())
+            assertEquals(ack, client2Messages.first())
         } finally {
-            client.close()
+            job1.cancel()
+            job2.cancel()
+            client1.close()
+            client2.close()
         }
     }
 }

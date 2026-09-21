@@ -160,9 +160,8 @@ class KtorServerGateway(
     override suspend fun sendMessage(message: ProtocolMessage): Result<Unit> {
         return runCatching {
             val payload = CoreJson.encodeToString(ProtocolMessage.serializer(), message)
-            val frame = Frame.Text(payload)
             for (session in activeSessions) {
-                session.send(frame)
+                session.send(Frame.Text(payload))
             }
         }
     }
@@ -171,9 +170,8 @@ class KtorServerGateway(
         try {
             val disconnectMsg = ProtocolMessage.DisconnectRequest("HOST_SHUTDOWN")
             val payload = CoreJson.encodeToString(ProtocolMessage.serializer(), disconnectMsg)
-            val frame = Frame.Text(payload)
             for (session in activeSessions) {
-                runCatching { session.send(frame) }
+                runCatching { session.send(Frame.Text(payload)) }
                 runCatching { session.close(CloseReason(CloseReason.Codes.NORMAL, "Server shutdown")) }
             }
         } catch (_: Exception) {
