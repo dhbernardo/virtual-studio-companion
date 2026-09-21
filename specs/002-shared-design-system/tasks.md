@@ -18,7 +18,7 @@
 - [x] **T04: Implementación de `StudioBadge` con pulso optimizado en `graphicsLayer`**  
   *Requisitos cubiertos:* `RF-002`, `RNF-002`  
   *Hecho cuando:* El composable renderice los estados `OFFLINE`, `STANDBY`, `LIVE` y `ALERT` con animación pulsante aislada en capa gráfica a 60 FPS.
-- [ ] **T05: Implementación de `TelemetryPill` con tokens semánticos reactivos**  
+- [x] **T05: Implementación de `TelemetryPill` con tokens semánticos reactivos**  
   *Requisitos cubiertos:* `RF-003`, `RNF-002`  
   *Hecho cuando:* `TelemetryPill` consuma `StudioTheme.colors.*` dinámicamente y muestre placeholders ante métricas nulas o pendientes.
 - [ ] **T06: Implementación de `StudioIndicator` y `StudioCounterCard`**  
