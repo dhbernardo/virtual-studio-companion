@@ -13,11 +13,15 @@ import com.vcompanion.shared.core.domain.usecase.CameraCommandDispatcher
 import com.vcompanion.shared.core.ports.IStreamGateway
 import com.vcompanion.shared.core.ports.ITelemetryEmitter
 import com.vcompanion.shared.core.protocol.ProtocolMessage
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 data class CameraUiState(
@@ -46,7 +50,10 @@ class CameraStreamViewModel(
     val initialConfig: PairingConfig? = null,
     private val onApplyZoom: ((Float) -> Boolean)? = null,
     private val onToggleTorch: ((Boolean) -> Boolean)? = null,
-    private val onSetFps: ((Int) -> Unit)? = null
+    private val onSetFps: ((Int) -> Unit)? = null,
+    private val onGetLiveFps: (() -> Float)? = null,
+    private val onGetLiveBitrate: (() -> Long)? = null,
+    private val periodicDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -75,6 +82,29 @@ class CameraStreamViewModel(
             }
         }
         sessionJobs.add(telemetryJob)
+
+        val periodicTelemetryJob = viewModelScope.launch(periodicDispatcher) {
+            while (isActive) {
+                delay(1000L)
+                if (_uiState.value.connectionState is ConnectionState.Streaming || _uiState.value.connectionState is ConnectionState.Connected) {
+                    val baseMetrics = telemetryEmitter.captureCurrentMetrics()
+                    val liveFps = onGetLiveFps?.invoke() ?: _uiState.value.currentFps.toFloat()
+                    val liveBitrate = onGetLiveBitrate?.invoke() ?: baseMetrics.bitrateKbps
+                    val currentMetrics = baseMetrics.copy(
+                        fps = liveFps,
+                        bitrateKbps = liveBitrate
+                    )
+                    val packet = ProtocolMessage.TelemetryPacket(
+                        timestamp = System.currentTimeMillis(),
+                        metrics = currentMetrics
+                    )
+                    try {
+                        streamGateway.sendMessage(packet)
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        sessionJobs.add(periodicTelemetryJob)
 
         _uiState.update {
             it.copy(
@@ -135,9 +165,13 @@ class CameraStreamViewModel(
             onSetFps?.invoke(30)
         }
 
+        val liveFps = onGetLiveFps?.invoke() ?: metrics.fps
+        val liveBitrate = onGetLiveBitrate?.invoke() ?: metrics.bitrateKbps
+        val updatedMetrics = metrics.copy(fps = liveFps, bitrateKbps = liveBitrate)
+
         _uiState.update { current ->
             current.copy(
-                deviceMetrics = metrics,
+                deviceMetrics = updatedMetrics,
                 currentFps = nextFps,
                 isThermalAlertActive = isSevere
             )
@@ -148,6 +182,11 @@ class CameraStreamViewModel(
         val applied = onApplyZoom?.invoke(ratio) ?: true
         if (applied) {
             _uiState.update { it.copy(currentZoomRatio = ratio) }
+            viewModelScope.launch {
+                try {
+                    streamGateway.sendMessage(ProtocolMessage.CommandPacket(CameraCommand.SetZoom(ratio)))
+                } catch (_: Exception) {}
+            }
         }
     }
 
@@ -157,6 +196,11 @@ class CameraStreamViewModel(
         val applied = onToggleTorch?.invoke(nextState) ?: true
         if (applied) {
             _uiState.update { it.copy(isTorchEnabled = nextState) }
+            viewModelScope.launch {
+                try {
+                    streamGateway.sendMessage(ProtocolMessage.CommandPacket(CameraCommand.ToggleTorch))
+                } catch (_: Exception) {}
+            }
         }
     }
 

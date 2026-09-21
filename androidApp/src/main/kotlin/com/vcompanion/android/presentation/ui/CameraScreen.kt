@@ -90,7 +90,9 @@ fun CameraScreen(
             initialConfig = config,
             onApplyZoom = { ratio -> captureAdapter.applyZoomRatio(ratio) },
             onToggleTorch = { captureAdapter.toggleTorch(hasFlashUnit = true) },
-            onSetFps = { fps -> captureAdapter.setTargetFps(fps) }
+            onSetFps = { fps -> captureAdapter.setTargetFps(fps) },
+            onGetLiveFps = { captureAdapter.currentFps },
+            onGetLiveBitrate = { captureAdapter.currentBitrateKbps }
         )
     }
 

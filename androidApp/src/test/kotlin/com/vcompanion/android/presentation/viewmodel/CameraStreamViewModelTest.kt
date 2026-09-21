@@ -230,4 +230,54 @@ class CameraStreamViewModelTest {
             coVerify { gateway.disconnect() }
         }
     }
+
+    @Test
+    fun shouldDispatchCommandPacketToGatewayWhenLocalZoomOrTorchInvoked() = runTest(testDispatcher) {
+        coEvery { gateway.sendMessage(any()) } returns Result.success(Unit)
+
+        val viewModel = CameraStreamViewModel(
+            streamGateway = gateway,
+            telemetryEmitter = telemetryEmitter
+        )
+
+        viewModel.setZoom(2.0f)
+        testDispatcher.scheduler.advanceUntilIdle()
+        coVerify { gateway.sendMessage(match { it is ProtocolMessage.CommandPacket && it.command == CameraCommand.SetZoom(2.0f) }) }
+
+        viewModel.toggleTorch()
+        testDispatcher.scheduler.advanceUntilIdle()
+        coVerify { gateway.sendMessage(match { it is ProtocolMessage.CommandPacket && it.command == CameraCommand.ToggleTorch }) }
+    }
+
+    @Test
+    fun shouldPeriodicallyEmitTelemetryPacketToGatewayDuringStreaming() = runTest(testDispatcher) {
+        coEvery { gateway.sendMessage(any()) } returns Result.success(Unit)
+        every { telemetryEmitter.captureCurrentMetrics() } returns DeviceMetrics(
+            fps = 60f,
+            bitrateKbps = 3500L,
+            latencyMs = 15L,
+            batteryLevel = 90,
+            isCharging = true
+        )
+
+        val viewModel = CameraStreamViewModel(
+            streamGateway = gateway,
+            telemetryEmitter = telemetryEmitter,
+            onGetLiveFps = { 59.5f },
+            onGetLiveBitrate = { 4200L },
+            periodicDispatcher = testDispatcher
+        )
+
+        viewModel.startSession(PairingConfig(host = "10.0.0.1", port = 8080, sessionToken = "tok"))
+        testDispatcher.scheduler.advanceTimeBy(1500L)
+        testDispatcher.scheduler.runCurrent()
+
+        coVerify(atLeast = 1) {
+            gateway.sendMessage(match {
+                it is ProtocolMessage.TelemetryPacket && it.metrics.fps == 59.5f && it.metrics.bitrateKbps == 4200L
+            })
+        }
+        viewModel.disconnect()
+    }
 }
+

@@ -1,6 +1,8 @@
 package com.vcompanion.android.adapters.camera
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
@@ -10,11 +12,13 @@ import androidx.camera.core.CameraControl
 import androidx.camera.core.CameraInfo
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.vcompanion.shared.core.domain.model.LensFacing
+import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -32,6 +36,37 @@ data class StreamResolution(
 interface VideoFrameEncoder {
     fun encodeFrame(rawFrame: ByteArray): ByteArray
     fun release()
+}
+
+class JpegVideoFrameEncoder(
+    private val quality: Int = 75
+) : VideoFrameEncoder {
+    override fun encodeFrame(rawFrame: ByteArray): ByteArray = rawFrame
+
+    fun encodeImageProxy(imageProxy: ImageProxy): ByteArray? {
+        return try {
+            val bitmap = imageProxy.toBitmap()
+            val rotation = imageProxy.imageInfo.rotationDegrees
+            val finalBitmap = if (rotation != 0) {
+                val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
+                Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            } else {
+                bitmap
+            }
+            val stream = ByteArrayOutputStream()
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
+            val bytes = stream.toByteArray()
+            if (finalBitmap !== bitmap) {
+                finalBitmap.recycle()
+            }
+            bitmap.recycle()
+            bytes
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    override fun release() {}
 }
 
 class H264MediaCodecEncoder(
@@ -113,6 +148,7 @@ class CameraXCaptureAdapter(
         height = targetResolution.height,
         fps = targetFps
     ),
+    private val jpegEncoder: JpegVideoFrameEncoder = JpegVideoFrameEncoder(quality = 75),
     private val backgroundExecutor: ExecutorService = Executors.newSingleThreadExecutor { r ->
         Thread(r, "CameraX-Worker").apply { priority = Thread.MAX_PRIORITY }
     }
@@ -128,6 +164,33 @@ class CameraXCaptureAdapter(
 
     var currentLensFacing: LensFacing = LensFacing.BACK
         private set
+
+    @Volatile
+    var currentFps: Float = 0f
+        private set
+
+    @Volatile
+    var currentBitrateKbps: Long = 0L
+        private set
+
+    private var frameCountWindow = 0
+    private var bytesCountWindow = 0L
+    private var windowStartMs = System.currentTimeMillis()
+
+    @Synchronized
+    fun recordEncodedFrame(byteCount: Int) {
+        frameCountWindow++
+        bytesCountWindow += byteCount
+        val now = System.currentTimeMillis()
+        val elapsed = now - windowStartMs
+        if (elapsed >= 1000L) {
+            currentFps = (frameCountWindow * 1000f) / elapsed
+            currentBitrateKbps = (bytesCountWindow * 8L) / elapsed
+            frameCountWindow = 0
+            bytesCountWindow = 0L
+            windowStartMs = now
+        }
+    }
 
     private var cameraControl: CameraControl? = null
     private var cameraInfo: CameraInfo? = null
@@ -185,15 +248,25 @@ class CameraXCaptureAdapter(
                 .build()
                 .also { analysis ->
                     analysis.setAnalyzer(backgroundExecutor) { imageProxy ->
-                        val planes = imageProxy.planes
-                        if (planes.isNotEmpty()) {
-                            val buffer = planes[0].buffer
-                            val bytes = ByteArray(buffer.remaining())
-                            buffer.get(bytes)
-                            val encoded = videoEncoder.encodeFrame(bytes)
-                            onFrameEncoded(encoded)
+                        try {
+                            val jpegBytes = jpegEncoder.encodeImageProxy(imageProxy)
+                            if (jpegBytes != null && jpegBytes.isNotEmpty()) {
+                                recordEncodedFrame(jpegBytes.size)
+                                onFrameEncoded(jpegBytes)
+                            } else {
+                                val planes = imageProxy.planes
+                                if (planes.isNotEmpty()) {
+                                    val buffer = planes[0].buffer
+                                    val bytes = ByteArray(buffer.remaining())
+                                    buffer.get(bytes)
+                                    val encoded = videoEncoder.encodeFrame(bytes)
+                                    recordEncodedFrame(encoded.size)
+                                    onFrameEncoded(encoded)
+                                }
+                            }
+                        } finally {
+                            imageProxy.close()
                         }
-                        imageProxy.close()
                     }
                 }
 
