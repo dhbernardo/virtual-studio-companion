@@ -17,10 +17,10 @@
   *Hecho cuando:* El cliente de red responda inmediatamente enviando `ProtocolMessage.Pong` ante paquetes `Ping` del Host y emita periódicamente telemetría con batería y estado térmico.
 
 ## Fase 3: ViewModels, HUD de Transmisión y Comandos Remotos
-- [ ] **T05: Pruebas unitarias para `CameraStreamViewModel` (TDD)**  
+- [x] **T05: Pruebas unitarias para `CameraStreamViewModel` (TDD)**  
   *Requisitos cubiertos:* `RF-003`, `RF-004`, `RF-005`  
   *Hecho cuando:* Se validen con Turbine los estados de conexión (`CameraUiState`), la reducción automática a 30 FPS ante estado térmico `SEVERE`/`CRITICAL`, y la ejecución de `CameraCommand` tipados.
-- [ ] **T06: Implementación de `CameraStreamViewModel`**  
+- [x] **T06: Implementación de `CameraStreamViewModel`**  
   *Requisitos cubiertos:* `RF-003`, `RF-004`, `RF-005`  
   *Hecho cuando:* El ViewModel integre los casos de uso compartidos, controle la linterna con validación previa de hardware (`hasFlashUnit()`) y apruebe el 100% de las pruebas de `T05`.
 - [ ] **T07: Implementación de `CameraScreen` con HUD de Estudio y `FLAG_KEEP_SCREEN_ON`**  
