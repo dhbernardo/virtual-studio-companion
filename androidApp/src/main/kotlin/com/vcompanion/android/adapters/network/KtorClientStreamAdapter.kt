@@ -95,6 +95,7 @@ class KtorClientStreamAdapter(
                                 }
                             }
                         }
+                        _incomingMessages.emit(ProtocolMessage.DisconnectRequest(reason = "SERVER_CLOSED"))
                     }
                 } catch (e: CancellationException) {
                     throw e

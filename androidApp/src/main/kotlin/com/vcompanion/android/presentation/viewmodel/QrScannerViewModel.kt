@@ -78,6 +78,16 @@ class QrScannerViewModel : ViewModel() {
         return true
     }
 
+    fun consumeScannedConfig() {
+        _uiState.update { current ->
+            current.copy(
+                isScanning = true,
+                scannedConfig = null,
+                errorMessage = null
+            )
+        }
+    }
+
     fun resetScanning() {
         _uiState.update { current ->
             current.copy(

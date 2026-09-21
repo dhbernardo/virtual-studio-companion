@@ -47,6 +47,7 @@ import com.vcompanion.android.adapters.network.KtorClientStreamAdapter
 import com.vcompanion.android.adapters.telemetry.AndroidTelemetryProvider
 import com.vcompanion.android.presentation.ui.components.CameraPreviewView
 import com.vcompanion.android.presentation.viewmodel.CameraStreamViewModel
+import com.vcompanion.shared.core.domain.model.ConnectionState
 import com.vcompanion.shared.core.domain.model.PairingConfig
 import com.vcompanion.shared.designsystem.components.CameraControlBar
 import com.vcompanion.shared.designsystem.components.StreamStatus
@@ -102,11 +103,27 @@ fun CameraScreen(
         }
     }
 
-    // Lifecycle observer to handle app backgrounding (RF-005)
+    // Reactive navigation on disconnection (RF-005)
+    LaunchedEffect(uiState.connectionState) {
+        if (uiState.connectionState is ConnectionState.Disconnected) {
+            captureAdapter.release()
+            onDisconnect()
+        }
+    }
+
+    // Lifecycle observer to handle app backgrounding and termination (RF-005)
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                captureAdapter.stopCapture()
+            when (event) {
+                Lifecycle.Event.ON_STOP -> {
+                    captureAdapter.stopCapture()
+                    viewModel.disconnect("APP_LIFECYCLE_STOP")
+                    captureAdapter.release()
+                }
+                Lifecycle.Event.ON_DESTROY -> {
+                    captureAdapter.release()
+                }
+                else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

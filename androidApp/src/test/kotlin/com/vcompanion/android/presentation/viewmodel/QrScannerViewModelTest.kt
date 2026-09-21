@@ -93,6 +93,24 @@ class QrScannerViewModelTest {
     }
 
     @Test
+    fun shouldConsumeScannedConfigAndResetToScanning() {
+        val viewModel = QrScannerViewModel()
+        val config = PairingConfig(
+            host = "192.168.1.50",
+            port = 9000,
+            sessionToken = "tok_test_123"
+        )
+        viewModel.onQrCodeScanned(config)
+        assertEquals(config, viewModel.uiState.value.scannedConfig)
+
+        viewModel.consumeScannedConfig()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.isScanning)
+        assertNull(state.scannedConfig)
+    }
+
+    @Test
     fun shouldSetErrorMessageWhenScanErrorOccurs() {
         val viewModel = QrScannerViewModel()
         viewModel.onScanError("Model downloading")

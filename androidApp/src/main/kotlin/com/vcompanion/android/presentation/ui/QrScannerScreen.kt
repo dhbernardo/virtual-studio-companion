@@ -113,7 +113,9 @@ fun QrScannerScreen(
     }
 
     LaunchedEffect(uiState.scannedConfig) {
-        uiState.scannedConfig?.let { config ->
+        val config = uiState.scannedConfig
+        if (config != null) {
+            viewModel.consumeScannedConfig()
             onQrCodeDetected(config)
         }
     }
