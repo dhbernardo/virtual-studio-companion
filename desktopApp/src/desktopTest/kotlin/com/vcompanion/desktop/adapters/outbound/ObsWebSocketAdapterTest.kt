@@ -344,4 +344,45 @@ class ObsWebSocketAdapterTest {
         assertTrue(result.isSuccess, "Browser source setup should succeed")
         assertTrue(setInputSettingsCalled, "SetInputSettings should be invoked when source already exists")
     }
+
+    @Test
+    fun shouldDisconnectObsCleanlyWithoutReconnecting() = runBlocking {
+        val fakeTransport = FakeObsTransport()
+        fakeTransport.onMessageSent = { text ->
+            val json = Json.parseToJsonElement(text).jsonObject
+            val op = json["op"]?.jsonPrimitive?.int
+            if (op == 1) { // Identify -> respond with Identified (op: 2)
+                runBlocking {
+                    val identified = buildJsonObject {
+                        put("op", 2)
+                        putJsonObject("d") {
+                            put("negotiatedRpcVersion", 1)
+                        }
+                    }.toString()
+                    fakeTransport.emitIncoming(identified)
+                }
+            }
+        }
+        adapter = ObsWebSocketAdapter(transport = fakeTransport)
+
+        val connectJob = async {
+            adapter!!.connect(host = "127.0.0.1", port = 4455, password = null)
+        }
+        val hello = buildJsonObject {
+            put("op", 0)
+            putJsonObject("d") {
+                put("obsWebSocketVersion", "5.1.0")
+                put("rpcVersion", 1)
+            }
+        }.toString()
+        fakeTransport.emitIncoming(hello)
+        connectJob.await()
+
+        assertEquals(ObsConnectionState.CONNECTED, adapter!!.connectionState.value)
+
+        adapter!!.disconnect()
+
+        assertEquals(ObsConnectionState.DISCONNECTED, adapter!!.connectionState.value)
+        assertEquals(false, fakeTransport.isConnected)
+    }
 }

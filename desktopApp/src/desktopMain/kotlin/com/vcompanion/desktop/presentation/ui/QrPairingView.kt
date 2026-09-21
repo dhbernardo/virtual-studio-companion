@@ -29,6 +29,7 @@ import com.vcompanion.shared.designsystem.components.StudioIndicator
 import com.vcompanion.shared.designsystem.theme.StudioTheme
 import com.vcompanion.shared.resources.Res
 import com.vcompanion.shared.resources.desktop_action_connect_obs
+import com.vcompanion.shared.resources.desktop_action_disconnect_obs
 import com.vcompanion.shared.resources.desktop_action_refresh_qr
 import com.vcompanion.shared.resources.desktop_host_address_label
 import com.vcompanion.shared.resources.desktop_session_token_label
@@ -51,6 +52,7 @@ fun QrPairingView(
     state: DesktopHostUiState,
     onRefreshToken: () -> Unit,
     onConnectObs: () -> Unit,
+    onDisconnectObs: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val colors = StudioTheme.colors
@@ -99,18 +101,50 @@ fun QrPairingView(
                 )
             }
 
-            if (state.obsConnectionState != ObsConnectionState.CONNECTED) {
-                Button(
-                    onClick = onConnectObs,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = colors.surfaceElevated,
-                        contentColor = colors.textPrimary
-                    )
-                ) {
-                    Text(
-                        text = stringResource(Res.string.desktop_action_connect_obs),
-                        style = typography.labelSmall
-                    )
+            when (state.obsConnectionState) {
+                ObsConnectionState.CONNECTED -> {
+                    Button(
+                        onClick = onDisconnectObs,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.surfaceElevated,
+                            contentColor = colors.liveAccent
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.desktop_action_disconnect_obs),
+                            style = typography.labelSmall
+                        )
+                    }
+                }
+                ObsConnectionState.CONNECTING -> {
+                    Button(
+                        onClick = {},
+                        enabled = false,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.surfaceElevated,
+                            contentColor = colors.textSecondary
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.desktop_obs_connecting),
+                            style = typography.labelSmall
+                        )
+                    }
+                }
+                ObsConnectionState.DISCONNECTED,
+                ObsConnectionState.ERROR -> {
+                    Button(
+                        onClick = onConnectObs,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.surfaceElevated,
+                            contentColor = colors.textPrimary
+                        )
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.desktop_action_connect_obs),
+                            style = typography.labelSmall
+                        )
+                    }
                 }
             }
         }

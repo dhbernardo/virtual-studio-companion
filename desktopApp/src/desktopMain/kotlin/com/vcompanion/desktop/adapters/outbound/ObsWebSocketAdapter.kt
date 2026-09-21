@@ -26,6 +26,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
@@ -57,13 +59,14 @@ class KtorObsTransport(
     private val client: HttpClient = HttpClient { install(WebSockets) }
 ) : IObsTransport {
     private var session: DefaultClientWebSocketSession? = null
-    private val _incoming = MutableSharedFlow<String>(extraBufferCapacity = 64)
+    private val _incoming = MutableSharedFlow<String>(replay = 1, extraBufferCapacity = 64)
     override val incoming: Flow<String> = _incoming.asSharedFlow()
     private val scope = CoroutineScope(Dispatchers.Default + Job())
     private var readJob: Job? = null
 
     override suspend fun connect(host: String, port: Int): Result<Unit> {
         return runCatching {
+            disconnect()
             val wsSession = client.webSocketSession(host = host, port = port, path = "/")
             session = wsSession
             readJob?.cancel()
@@ -120,6 +123,7 @@ class ObsWebSocketAdapter(
     private var reconnectJob: Job? = null
     private var transportJob: Job? = null
 
+    private val connectMutex = Mutex()
     private val pendingRequests = ConcurrentHashMap<String, CompletableDeferred<JsonObject>>()
     private val identifiedDeferred = CompletableDeferred<Unit>()
 
@@ -137,30 +141,36 @@ class ObsWebSocketAdapter(
         return doConnect(host, port, password)
     }
 
-    private suspend fun doConnect(host: String, port: Int, password: String?): Result<Unit> {
+    private suspend fun doConnect(host: String, port: Int, password: String?): Result<Unit> = connectMutex.withLock {
         _connectionState.value = ObsConnectionState.CONNECTING
+
+        val handshakeDeferred = CompletableDeferred<Unit>()
+
+        // 1. Cancel previous transport job without triggering reconnect in finally
+        val previousJob = transportJob
+        transportJob = null
+        previousJob?.cancel()
+
+        // 2. Subscribe before connecting transport to ensure op:0 (Hello) is captured deterministically
+        val currentJob = scope.launch {
+            try {
+                transport.incoming.collect { text ->
+                    handleIncomingMessage(text, password, handshakeDeferred)
+                }
+            } finally {
+                if (!intentionalDisconnect && transportJob != null) {
+                    _connectionState.value = ObsConnectionState.DISCONNECTED
+                    scheduleReconnect()
+                }
+            }
+        }
+        transportJob = currentJob
 
         val connectResult = transport.connect(host, port)
         if (connectResult.isFailure) {
             _connectionState.value = ObsConnectionState.ERROR
             scheduleReconnect()
             return connectResult
-        }
-
-        val handshakeDeferred = CompletableDeferred<Unit>()
-
-        transportJob?.cancel()
-        transportJob = scope.launch {
-            try {
-                transport.incoming.collect { text ->
-                    handleIncomingMessage(text, password, handshakeDeferred)
-                }
-            } finally {
-                if (!intentionalDisconnect) {
-                    _connectionState.value = ObsConnectionState.DISCONNECTED
-                    scheduleReconnect()
-                }
-            }
         }
 
         return runCatching {
@@ -315,13 +325,15 @@ class ObsWebSocketAdapter(
         }
     }
 
-    override suspend fun disconnect() {
+    override suspend fun disconnect() = connectMutex.withLock {
         intentionalDisconnect = true
         reconnectJob?.cancel()
-        transportJob?.cancel()
+        reconnectJob = null
+        val job = transportJob
+        transportJob = null
+        job?.cancel()
         pendingRequests.values.forEach { deferred -> deferred.cancel() }
         pendingRequests.clear()
-        scope.coroutineContext[Job]?.cancelChildren()
         runCatching {
             transport.disconnect()
         }

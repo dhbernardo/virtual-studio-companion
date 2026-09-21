@@ -469,5 +469,42 @@ class DesktopHostViewModelTest {
 
         assertEquals("http://192.168.1.50:8080/stream/preview", obs.lastSetupUrl)
     }
+
+    @Test
+    fun shouldDisconnectObsIndependentlyWithoutAffectingActiveMobileSession() = runTest {
+        val gateway = FakeStreamGateway()
+        val obs = FakeObsConnector()
+
+        val viewModel = DesktopHostViewModel(
+            gateway = gateway,
+            obsConnector = obs,
+            hostIp = "192.168.1.50",
+            effectivePort = 8080,
+            coroutineScope = backgroundScope,
+            tickerDispatcher = StandardTestDispatcher(testScheduler)
+        )
+
+        val initialToken = viewModel.uiState.value.sessionToken
+        gateway.emitIncoming(
+            ProtocolMessage.HandshakeInit(
+                clientVersion = "1.0.0",
+                deviceModel = "Pixel 7 Pro",
+                sessionToken = initialToken
+            )
+        )
+        testScheduler.runCurrent()
+        assertTrue(viewModel.uiState.value.connectionState is ConnectionState.Connected)
+
+        obs.setState(ObsConnectionState.CONNECTED)
+        testScheduler.runCurrent()
+        assertEquals(ObsConnectionState.CONNECTED, viewModel.uiState.value.obsConnectionState)
+
+        viewModel.disconnectObs()
+        testScheduler.runCurrent()
+
+        assertEquals(ObsConnectionState.DISCONNECTED, viewModel.uiState.value.obsConnectionState)
+        assertTrue(viewModel.uiState.value.connectionState is ConnectionState.Connected)
+        assertEquals(0, gateway.sentMessages.filterIsInstance<ProtocolMessage.DisconnectRequest>().size)
+    }
 }
 

@@ -279,6 +279,12 @@ class DesktopHostViewModel(
         }
     }
 
+    fun disconnectObs() {
+        coroutineScope.launch {
+            obsConnector.disconnect()
+        }
+    }
+
     fun sendCommand(command: CameraCommand) {
         val dispatchResult = cameraCommandDispatcher.dispatch(command, _uiState.value.connectionState)
         if (dispatchResult is CommandDispatchResult.Success) {

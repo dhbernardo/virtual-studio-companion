@@ -28,6 +28,7 @@ import com.vcompanion.shared.designsystem.theme.StudioTheme
 import com.vcompanion.shared.resources.Res
 import com.vcompanion.shared.resources.action_disconnect
 import com.vcompanion.shared.resources.desktop_action_connect_obs
+import com.vcompanion.shared.resources.desktop_action_disconnect_obs
 import com.vcompanion.shared.resources.action_switch_camera
 import com.vcompanion.shared.resources.action_toggle_torch
 import com.vcompanion.shared.resources.action_zoom_in
@@ -70,6 +71,7 @@ fun StreamingDashboardView(
     onSendCommand: (CameraCommand) -> Unit,
     onDisconnect: () -> Unit,
     onConnectObs: () -> Unit = {},
+    onDisconnectObs: () -> Unit = {},
     videoFrame: ImageBitmap? = null,
     modifier: Modifier = Modifier
 ) {
@@ -119,19 +121,51 @@ fun StreamingDashboardView(
                     color = colors.textSecondary
                 )
 
-                if (state.obsConnectionState != ObsConnectionState.CONNECTED) {
-                    Spacer(modifier = Modifier.width(spacing.medium))
-                    Button(
-                        onClick = onConnectObs,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colors.surfaceElevated,
-                            contentColor = colors.textPrimary
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.desktop_action_connect_obs),
-                            style = typography.labelSmall
-                        )
+                Spacer(modifier = Modifier.width(spacing.medium))
+                when (state.obsConnectionState) {
+                    ObsConnectionState.CONNECTED -> {
+                        Button(
+                            onClick = onDisconnectObs,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceElevated,
+                                contentColor = colors.liveAccent
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.desktop_action_disconnect_obs),
+                                style = typography.labelSmall
+                            )
+                        }
+                    }
+                    ObsConnectionState.CONNECTING -> {
+                        Button(
+                            onClick = {},
+                            enabled = false,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceElevated,
+                                contentColor = colors.textSecondary
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.desktop_obs_connecting),
+                                style = typography.labelSmall
+                            )
+                        }
+                    }
+                    ObsConnectionState.DISCONNECTED,
+                    ObsConnectionState.ERROR -> {
+                        Button(
+                            onClick = onConnectObs,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.surfaceElevated,
+                                contentColor = colors.textPrimary
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.desktop_action_connect_obs),
+                                style = typography.labelSmall
+                            )
+                        }
                     }
                 }
             }

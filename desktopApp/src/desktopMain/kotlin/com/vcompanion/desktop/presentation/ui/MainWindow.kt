@@ -33,7 +33,8 @@ fun MainWindow(
                     QrPairingView(
                         state = state,
                         onRefreshToken = { viewModel.refreshToken() },
-                        onConnectObs = { viewModel.connectObs() }
+                        onConnectObs = { viewModel.connectObs() },
+                        onDisconnectObs = { viewModel.disconnectObs() }
                     )
                 }
 
@@ -45,6 +46,7 @@ fun MainWindow(
                         onSendCommand = { viewModel.sendCommand(it) },
                         onDisconnect = { viewModel.disconnectSession() },
                         onConnectObs = { viewModel.connectObs() },
+                        onDisconnectObs = { viewModel.disconnectObs() },
                         videoFrame = videoFrame
                     )
                 }
