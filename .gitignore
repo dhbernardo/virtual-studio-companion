@@ -1,0 +1,41 @@
+# Gradle and Build Cache
+.gradle/
+build/
+**/build/
+bin/
+
+# Local configuration files
+local.properties
+.env
+*.local
+
+# IDE and Editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+*~
+
+# Android Studio and SDK
+captures/
+.externalNativeBuild/
+.cxx/
+output.json
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Artifacts & Outputs
+*.apk
+*.aab
+*.exe
+*.msi
+package/
+dist/
+
+# Log files
+*.log

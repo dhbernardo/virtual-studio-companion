@@ -1,7 +1,7 @@
 # Desglose de Tareas: 000-architecture-and-tech-stack
 
 ## Fase 1: Inicialización del Catálogo y Configuración Raíz
-- [ ] **T01: Creación del catálogo de versiones centralizado (`gradle/libs.versions.toml`)**  
+- [x] **T01: Creación del catálogo de versiones centralizado (`gradle/libs.versions.toml`)**  
   *Requisitos cubiertos:* `RF-003`, `RNF-003`  
   *Hecho cuando:* El archivo `gradle/libs.versions.toml` declare las versiones fijas y verificadas de Kotlin 2.x, Compose Multiplatform, Ktor, Coroutines, Serialization, toolchain Java 21, desugaring (`desugar_jdk_libs`) y dependencias bajo licencias permisivas (Apache 2.0, MIT, BSD, GPLv2+CE).
 - [ ] **T02: Configuración de `settings.gradle.kts` y `build.gradle.kts` raíz con evaluación condicional**  
