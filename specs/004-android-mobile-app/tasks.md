@@ -23,6 +23,6 @@
 - [x] **T06: Implementación de `CameraStreamViewModel`**  
   *Requisitos cubiertos:* `RF-003`, `RF-004`, `RF-005`  
   *Hecho cuando:* El ViewModel integre los casos de uso compartidos, controle la linterna con validación previa de hardware (`hasFlashUnit()`) y apruebe el 100% de las pruebas de `T05`.
-- [ ] **T07: Implementación de `CameraScreen` con HUD de Estudio y `FLAG_KEEP_SCREEN_ON`**  
+- [x] **T07: Implementación de `CameraScreen` con HUD de Estudio y `FLAG_KEEP_SCREEN_ON`**  
   *Requisitos cubiertos:* `RF-003`, `RF-005`, `RNF-004` (Constitución Principios 5 y 8)  
   *Hecho cuando:* La pantalla combine la vista previa con los componentes compartidos (`StudioBadge`, `TelemetryPill`, `StudioIndicator`, `CameraControlBar`), mantenga la pantalla activa durante el streaming y despache `DISCONNECT_REQUEST` al salir.
