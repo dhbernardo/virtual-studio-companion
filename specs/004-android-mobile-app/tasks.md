@@ -9,7 +9,7 @@
   *Hecho cuando:* La pantalla de escaneo detecte el código QR en tiempo real, gestione exclusivamente el permiso `CAMERA` y exhiba la vista de contingencia con `Res.string.*` ante rechazos permanentes.
 
 ## Fase 2: Pipeline de Captura y Codificación de Video por Hardware
-- [ ] **T03: Adaptador de captura de video con `MediaCodec` H.264 (`CameraXCaptureAdapter`)**  
+- [x] **T03: Adaptador de captura de video con `MediaCodec` H.264 (`CameraXCaptureAdapter`)**  
   *Requisitos cubiertos:* `RF-002`, `RNF-001`, `RNF-002` (AGENTS.md Regla 4)  
   *Hecho cuando:* Se configure CameraX a 1080p, se codifiquen frames H.264 acelerados por hardware en un hilo dedicado y se transmitan sobre `/ws/stream` sin penalizar el hilo de Compose.
 - [ ] **T04: Adaptador de telemetría y responder de Ping/Pong RTT (`AndroidTelemetryProvider` / `KtorClientStreamAdapter`)**  
