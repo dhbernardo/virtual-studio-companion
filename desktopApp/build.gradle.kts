@@ -46,6 +46,7 @@ kotlin {
 compose.desktop {
     application {
         mainClass = "com.vcompanion.desktop.MainKt"
+        javaHome = "${System.getProperty("user.home")}/.jdks/corretto-24.0.2"
 
         nativeDistributions {
             targetFormats(
@@ -57,6 +58,11 @@ compose.desktop {
             description = "Virtual Studio Companion Windows Host"
             vendor = "Virtual Studio Companion"
             copyright = "Copyright (c) 2026"
+
+            windows {
+                menuGroup = "Virtual Studio"
+                upgradeUuid = "6b4d32a0-8f1b-4f40-8b1b-3b7c2598f821"
+            }
         }
     }
 }

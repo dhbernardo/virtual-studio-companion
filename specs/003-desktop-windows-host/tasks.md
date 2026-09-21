@@ -25,6 +25,6 @@
   *Hecho cuando:* La ventana renderice el QR con cuenta regresiva, el dashboard consuma `StudioCounterCard`, `StudioBadge` y `StudioIndicator`, y el cierre de ventana (`onCloseRequest`) despache `DISCONNECT_REQUEST` ordenadamente.
 
 ## Fase 4: Empaquetado y Distribución Autocontenida
-- [ ] **T07: Configuración y verificación de empaquetado `jpackage` a `.exe` / `.msi`**  
+- [x] **T07: Configuración y verificación de empaquetado `jpackage` a `.exe` / `.msi`**  
   *Requisitos cubiertos:* `RF-005`, `RNF-001`  
   *Hecho cuando:* La ejecución de `./gradlew :desktopApp:packageMsi` o `packageExe` genere el instalador ejecutable autocontenido en `desktopApp/build/compose/binaries/main/` sin requerir Java en el sistema.
