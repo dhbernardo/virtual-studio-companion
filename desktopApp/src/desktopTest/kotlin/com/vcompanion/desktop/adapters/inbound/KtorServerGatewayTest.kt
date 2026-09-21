@@ -150,38 +150,35 @@ class KtorServerGatewayTest {
         val client1Messages = java.util.concurrent.CopyOnWriteArrayList<ProtocolMessage>()
         val client2Messages = java.util.concurrent.CopyOnWriteArrayList<ProtocolMessage>()
 
-        val job1 = launch(Dispatchers.IO) {
-            try {
-                client1.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
-                    for (frame in incoming) {
-                        if (frame is Frame.Text) {
-                            val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
-                            if (msg !is ProtocolMessage.Ping) {
-                                client1Messages.add(msg)
+        suspend fun connectWithRetry(client: HttpClient, port: Int, messageList: java.util.concurrent.CopyOnWriteArrayList<ProtocolMessage>) {
+            var connected = false
+            for (attempt in 1..5) {
+                try {
+                    client.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
+                        connected = true
+                        for (frame in incoming) {
+                            if (frame is Frame.Text) {
+                                val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
+                                if (msg !is ProtocolMessage.Ping) {
+                                    messageList.add(msg)
+                                }
                             }
                         }
                     }
+                    break
+                } catch (_: Exception) {
+                    if (connected) break
+                    kotlinx.coroutines.delay(100)
                 }
-            } catch (_: Exception) {
-                // Ignore disconnect
             }
         }
 
+        val job1 = launch(Dispatchers.IO) {
+            connectWithRetry(client1, port, client1Messages)
+        }
+
         val job2 = launch(Dispatchers.IO) {
-            try {
-                client2.webSocket(host = "127.0.0.1", port = port, path = "/ws/control") {
-                    for (frame in incoming) {
-                        if (frame is Frame.Text) {
-                            val msg = CoreJson.decodeFromString(ProtocolMessage.serializer(), frame.readText())
-                            if (msg !is ProtocolMessage.Ping) {
-                                client2Messages.add(msg)
-                            }
-                        }
-                    }
-                }
-            } catch (_: Exception) {
-                // Ignore disconnect
-            }
+            connectWithRetry(client2, port, client2Messages)
         }
 
         try {

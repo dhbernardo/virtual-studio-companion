@@ -24,7 +24,7 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
 - **Criterio de Aceptación:**
   - **DADO QUE** el servidor está a la espera de conexión
   - **CUANDO** se muestra la vista de emparejamiento
-  - **ENTONCES** debe exhibir el QR renderizado conforme a ISO/IEC 18004 garantizando decodificación óptica inmediata en lectores móviles, la IP física y el puerto activos legibles, y una barra/indicador con los 120 segundos de validez restante.
+  - **ENTONCES** debe exhibir el QR renderizado conforme a ISO/IEC 18004 garantizando decodificación óptica inmediata en lectores móviles, la IP física, el puerto activo y el token de sesión alfanumérico legible para permitir la entrada manual, junto a una barra/indicador con los 120 segundos de validez restante.
   - **DADO QUE** transcurren los 120 segundos sin que el móvil complete el handshake
   - **CUANDO** expira el temporizador
   - **ENTONCES** debe regenerar automáticamente un nuevo token efímero y actualizar el QR sin intervención del usuario.

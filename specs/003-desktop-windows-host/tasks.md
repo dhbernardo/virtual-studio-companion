@@ -22,7 +22,7 @@
   *Hecho cuando:* El ViewModel exponga el cálculo de RTT, el temporizador de TTL del token (120 s) y despache `CameraCommand` tipados hacia el gateway.
 - [x] **T06: Vistas Compose Desktop (`MainWindow`, `QrPairingView`, `StreamingDashboardView`)**  
   *Requisitos cubiertos:* `RF-002`, `RF-004`, `RNF-004` (Constitución Principios 5 y 8)  
-  *Hecho cuando:* La ventana renderice el QR con cuenta regresiva, el dashboard consuma `StudioCounterCard`, `StudioBadge` y `StudioIndicator`, y el cierre de ventana (`onCloseRequest`) despache `DISCONNECT_REQUEST` ordenadamente.
+  *Hecho cuando:* La ventana renderice el QR con cuenta regresiva, exhiba la dirección IP:puerto y el token de sesión alfanumérico para entrada manual, el dashboard consuma `StudioCounterCard`, `StudioBadge` y `StudioIndicator`, y el cierre de ventana (`onCloseRequest`) despache `DISCONNECT_REQUEST` ordenadamente.
 
 ## Fase 4: Empaquetado y Distribución Autocontenida
 - [x] **T07: Configuración y verificación de empaquetado `jpackage` a `.exe` / `.msi`**  

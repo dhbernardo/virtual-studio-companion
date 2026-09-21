@@ -16,7 +16,7 @@ desktopApp/src/desktopMain/kotlin/com/vcompanion/desktop/
 │   └── ui/
 │       ├── MainWindow.kt              # Ventana principal Compose Desktop con onCloseRequest
 │       ├── QrCanvasRenderer.kt        # Generación de matriz QR vía ZXing Core y renderizado en Compose Canvas
-│       ├── QrPairingView.kt           # Vista de espera, QR renderizado y cuenta regresiva TTL (120s)
+│       ├── QrPairingView.kt           # Vista de espera, QR renderizado, IP:puerto, token legible y cuenta regresiva TTL (120s)
 │       └── StreamingDashboardView.kt  # StudioCounterCard (FPS/bitrate/RTT), StudioBadge y StudioIndicator
 └── Main.kt                            # Composition Root: inyección e inicio
 ```

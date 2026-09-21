@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.vcompanion.desktop.presentation.viewmodel.DesktopHostUiState
 import com.vcompanion.shared.core.ports.ObsConnectionState
@@ -30,6 +31,7 @@ import com.vcompanion.shared.resources.Res
 import com.vcompanion.shared.resources.desktop_action_connect_obs
 import com.vcompanion.shared.resources.desktop_action_refresh_qr
 import com.vcompanion.shared.resources.desktop_host_address_label
+import com.vcompanion.shared.resources.desktop_session_token_label
 import com.vcompanion.shared.resources.desktop_obs_connected
 import com.vcompanion.shared.resources.desktop_obs_connecting
 import com.vcompanion.shared.resources.desktop_obs_disconnected
@@ -138,6 +140,23 @@ fun QrPairingView(
                 text = "${state.hostIp}:${state.port}",
                 style = typography.titleMedium,
                 color = colors.textPrimary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(spacing.extraSmall))
+
+        // Token de sesión alfanumérico para entrada manual
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(Res.string.desktop_session_token_label),
+                style = typography.bodyMedium,
+                color = colors.textSecondary
+            )
+            Spacer(modifier = Modifier.width(spacing.small))
+            Text(
+                text = state.sessionToken,
+                style = typography.titleMedium.copy(fontFamily = FontFamily.Monospace),
+                color = colors.standbyAccent
             )
         }
 

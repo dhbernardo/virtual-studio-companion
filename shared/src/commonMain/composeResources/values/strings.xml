@@ -78,6 +78,7 @@
     <string name="desktop_obs_error">OBS Error</string>
     <string name="desktop_action_connect_obs">Conectar OBS</string>
     <string name="desktop_host_address_label">Dirección Local:</string>
+    <string name="desktop_session_token_label">Token de Emparejamiento:</string>
     <string name="desktop_token_expires_label">Validez del Token:</string>
     <string name="desktop_seconds_suffix">s</string>
     <string name="desktop_action_refresh_qr">Regenerar Token</string>
