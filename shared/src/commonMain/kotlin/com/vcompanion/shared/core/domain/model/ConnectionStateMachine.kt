@@ -1,56 +1,103 @@
 package com.vcompanion.shared.core.domain.model
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
+/**
+ * Máquina de Estados Finitos (FSM) que orquesta el ciclo de vida de la conexión.
+ * Expone un StateFlow inmutable según RF-002, RNF-001 y RNF-002.
+ */
 class ConnectionStateMachine(
-    scope: CoroutineScope? = null,
-    reconnectionTimeoutMs: Long = 10_000L
+    private val scope: CoroutineScope? = null,
+    private val reconnectionTimeoutMs: Long = 10_000L
 ) {
-    val state: StateFlow<ConnectionState>
-        get() = TODO("Not implemented")
+    private val _state = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
+    val state: StateFlow<ConnectionState> = _state.asStateFlow()
+
+    private var timeoutJob: Job? = null
 
     fun onScanQr(config: PairingConfig) {
-        TODO("Not implemented")
+        cancelTimeout()
+        _state.value = ConnectionState.Pairing(config)
     }
 
     fun onHandshakeSuccess(sessionInfo: String? = null) {
-        TODO("Not implemented")
+        cancelTimeout()
+        _state.value = ConnectionState.Connected(sessionInfo)
     }
 
     fun onHandshakeFailed(error: ConnectionError) {
-        TODO("Not implemented")
+        cancelTimeout()
+        _state.value = ConnectionState.Error(error)
     }
 
     fun onStartStreaming() {
-        TODO("Not implemented")
+        if (_state.value is ConnectionState.Connected) {
+            cancelTimeout()
+            _state.value = ConnectionState.Streaming
+        }
     }
 
     fun onStopStreaming() {
-        TODO("Not implemented")
+        if (_state.value is ConnectionState.Streaming) {
+            cancelTimeout()
+            _state.value = ConnectionState.Connected()
+        }
     }
 
     fun onHeartbeatLost() {
-        TODO("Not implemented")
+        if (_state.value is ConnectionState.Streaming) {
+            _state.value = ConnectionState.Reconnecting(attempt = 1)
+            startReconnectionTimer()
+        }
     }
 
     fun onHeartbeatRestored() {
-        TODO("Not implemented")
+        if (_state.value is ConnectionState.Reconnecting) {
+            cancelTimeout()
+            _state.value = ConnectionState.Streaming
+        }
     }
 
     fun onReconnectionTimeout() {
-        TODO("Not implemented")
+        if (_state.value is ConnectionState.Reconnecting) {
+            cancelTimeout()
+            _state.value = ConnectionState.Disconnected
+        }
     }
 
     fun onDisconnectRequest(reason: String = "USER_REQUEST") {
-        TODO("Not implemented")
+        cancelTimeout()
+        _state.value = ConnectionState.Disconnected
     }
 
     fun onError(error: ConnectionError) {
-        TODO("Not implemented")
+        cancelTimeout()
+        _state.value = ConnectionState.Error(error)
     }
 
     fun reset() {
-        TODO("Not implemented")
+        cancelTimeout()
+        _state.value = ConnectionState.Disconnected
+    }
+
+    private fun startReconnectionTimer() {
+        cancelTimeout()
+        scope?.let { coroutineScope ->
+            timeoutJob = coroutineScope.launch {
+                delay(reconnectionTimeoutMs)
+                onReconnectionTimeout()
+            }
+        }
+    }
+
+    private fun cancelTimeout() {
+        timeoutJob?.cancel()
+        timeoutJob = null
     }
 }

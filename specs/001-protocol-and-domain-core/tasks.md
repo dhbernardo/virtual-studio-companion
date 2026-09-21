@@ -12,7 +12,7 @@
 - [x] **T03: Pruebas unitarias para la máquina de estados con Turbine**  
   *Requisitos cubiertos:* `RF-002`, `RNF-001`  
   *Hecho cuando:* `shared/src/commonTest/.../ConnectionStateMachineTest.kt` valide las transiciones permitidas (`DISCONNECTED -> PAIRING -> CONNECTED -> STREAMING`), el manejo de timeout en `RECONNECTING` (10s hacia `DISCONNECTED`), la desconexión limpia (`DISCONNECT_REQUEST`) y la transición a `ERROR(ConnectionError)`.
-- [ ] **T04: Implementación de `ConnectionStateMachine` y contratos de puertos**  
+- [x] **T04: Implementación de `ConnectionStateMachine` y contratos de puertos**  
   *Requisitos cubiertos:* `RF-002`, `RNF-002`  
   *Hecho cuando:* La FSM exponga un `StateFlow<ConnectionState>` inmutable y satisfaga el 100% de las aserciones de `T03`.
 
