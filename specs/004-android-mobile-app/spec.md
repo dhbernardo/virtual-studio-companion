@@ -9,11 +9,14 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
 
 ### RF-001: Mecanismo de Emparejamiento (Escaneo Óptico QR y Contingencia Manual)
 - **Tipo:** Event-driven & User-driven
-- **Definición:** El sistema DEBE proveer un mecanismo integral de emparejamiento con el Host en Windows que soporte tanto detección óptica instantánea mediante **Google ML Kit** (`Barcode.FORMAT_QR_CODE`) sobre la URI de conexión (`vcam://pair?...`) con visor de recorte transparente, como contingencia manual mediante un diálogo modal Compose para el ingreso directo de IP, puerto y token, validando el esquema a través de `ParsePairingPayloadUseCase`, consumiendo de forma unívoca la configuración detectada (`consumeScannedConfig()`) para evitar bucles de navegación al regresar de la pantalla de transmisión, e iniciando la conexión sin requerir escaneo óptico si las condiciones del sensor o iluminación lo impiden.
+- **Definición:** El sistema DEBE proveer un mecanismo integral de emparejamiento con el Host en Windows que soporte tanto detección óptica instantánea mediante **Google ML Kit** (`Barcode.FORMAT_QR_CODE`) sobre la URI de conexión (`vcam://pair?...`) con visor de recorte transparente, como contingencia manual mediante un diálogo modal Compose para el ingreso directo de IP, puerto y token, validando el esquema a través de `ParsePairingPayloadUseCase`, consumiendo de forma unívoca la configuración detectada (`consumeScannedConfig()`) para evitar bucles de navegación al regresar de la pantalla de transmisión, inicializando el estado de la pantalla de transmisión directamente en `Pairing(config)` y configurando los recolectores de mensajes antes del enlace de sockets para evitar la pérdida de paquetes de control.
 - **Criterio de Aceptación:**
   - **DADO QUE** se detecta un Código QR válido en el encuadre
   - **CUANDO** ML Kit extrae la cadena
   - **ENTONCES** debe invocar `ParsePairingPayloadUseCase`, pasar la configuración al ViewModel, consumir el evento de configuración para que no quede retenido en el estado, y transitar a la pantalla de transmisión en menos de 300 ms tras la detección.
+  - **DADO QUE** se abre `CameraScreen` con la configuración recibida
+  - **CUANDO** se inicializa `CameraStreamViewModel`
+  - **ENTONCES** su estado inicial debe nacer en `ConnectionState.Pairing(config)` y activar la escucha de mensajes antes de abrir la conexión WebSocket con el Host.
   - **DADO QUE** el usuario regresa de la pantalla de transmisión a la de escaneo tras desconectarse o finalizar
   - **CUANDO** se recompone `QrScannerScreen`
   - **ENTONCES** `scannedConfig` debe encontrarse nulo (`null`), manteniendo la cámara lista para un nuevo escaneo sin saltar automáticamente a la pantalla de transmisión.
@@ -60,7 +63,7 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
 
 ### RF-005: Ejecución Reactiva de Comandos Remotos y Cierre Ordenado
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el canal de control reciba un comando válido proveniente del Host bajo la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)`, la app móvil DEBE validar las capacidades físicas del hardware y aplicar el cambio de forma inmediata, despachando `DISCONNECT_REQUEST` ante la salida voluntaria de la pantalla o la pausa/detención del ciclo de vida del Activity (`ON_STOP`/`ON_DESTROY`), y detectando el cierre remoto del socket del Host para regresar de inmediato a la pantalla de escaneo.
+- **Definición:** CUANDO el canal de control reciba un comando válido proveniente del Host bajo la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)`, la app móvil DEBE validar las capacidades físicas del hardware y aplicar el cambio de forma inmediata, despachando `DISCONNECT_REQUEST` ante la salida voluntaria de la pantalla o la pausa/detención del ciclo de vida del Activity (`ON_STOP`/`ON_DESTROY`), y detectando el cierre remoto del socket del Host para regresar de inmediato a la pantalla de escaneo mediante un guardián de transición que evite cierres en el montaje inicial.
 - **Criterio de Aceptación:**
   - **DADO QUE** se recibe un paquete de comando `{ "type": "COMMAND", "command": { "type": "TOGGLE_TORCH" } }`
   - **CUANDO** `cameraInfo.hasFlashUnit()` confirma la presencia de flash LED
@@ -71,6 +74,9 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **DADO QUE** el Host de Windows se cierra, desconecta o cae inesperadamente
   - **CUANDO** el canal WebSocket entrante de Ktor detecta la finalización de los frames
   - **ENTONCES** debe emitir `ProtocolMessage.DisconnectRequest("SERVER_CLOSED")`, provocando la transición del ViewModel a `Disconnected`, la liberación de CameraX y el retorno automático de la pantalla a la vista de escáner.
+  - **DADO QUE** la pantalla `CameraScreen` se compone inicialmente
+  - **CUANDO** se evalúa el observador reactivo de estado de conexión (`LaunchedEffect`)
+  - **ENTONCES** debe protegerse mediante un guardián de sesión activa (`hasActiveSession`) de modo que solo transite a escaneo cuando una sesión previamente activa transite a `Disconnected`, impidiendo cualquier rebote prematuro.
   - **DADO QUE** la app pasa a segundo plano o se detiene (`ON_STOP` o `ON_DESTROY`)
   - **CUANDO** el ciclo de vida del Activity se suspende
   - **ENTONCES** debe enviar `DISCONNECT_REQUEST("APP_LIFECYCLE_STOP")` al Host, liberar CameraX y cerrar ordenadamente los sockets.
