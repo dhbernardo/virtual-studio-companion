@@ -12,7 +12,7 @@
   *Hecho cuando:* Se organicen `values/strings.xml`, `drawable/` (iconos vectoriales de control) y `font/`, garantizando cero strings, dimensiones fijas o rutas de dibujo en crudo en los composables.
 
 ## Fase 2: Componentes Atómicos y Base Constitucional
-- [ ] **T03: Pruebas unitarias de contraste WCAG AA, formateo y mapeo de estados**  
+- [x] **T03: Pruebas unitarias de contraste WCAG AA, formateo y mapeo de estados**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RF-003`, `RNF-003`  
   *Hecho cuando:* `shared/src/commonTest/.../DesignSystemSanityTest.kt` compruebe los ratios de contraste de las paletas, la función de mapeo `ConnectionState.toStreamStatus()` y el formateo de placeholders (`--- ms`).
 - [ ] **T04: Implementación de `StudioBadge` con pulso optimizado en `graphicsLayer`**  
