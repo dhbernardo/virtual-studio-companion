@@ -1,7 +1,7 @@
 # Desglose de Tareas: 002-shared-design-system
 
 ## Fase 1: Tokens de Diseño, Modo Claro/Oscuro y Recursos Centralizados
-- [ ] **T01: Definición de tokens de color Dark & Light (WCAG AA), tipografía y espaciados**  
+- [x] **T01: Definición de tokens de color Dark & Light (WCAG AA), tipografía y espaciados**  
   *Requisitos cubiertos:* `RF-001`, `RNF-003`  
   *Hecho cuando:* Se implementen `StudioDarkColors`, `StudioLightColors` (con acentos de alto contraste), `StudioTypography` y `StudioSpacing` en `shared/.../designsystem/theme/` verificando matemáticamente ratio WCAG AA > 4.5:1 en ambos modos.
 - [ ] **T02: Implementación de `StudioTheme` con persistencia mediante `ThemePreferencesRepository`**  
