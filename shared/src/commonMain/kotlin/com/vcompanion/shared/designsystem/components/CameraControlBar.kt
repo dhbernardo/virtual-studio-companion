@@ -39,7 +39,7 @@ fun CameraControlBar(
     isZoomInEnabled: Boolean = true,
     isZoomOutEnabled: Boolean = true,
     onSettingsClick: (() -> Unit)? = null,
-    enableBlur: Boolean = true
+    enableBlur: Boolean = false
 ) {
     val spacing = StudioTheme.spacing
     val colors = StudioTheme.colors
