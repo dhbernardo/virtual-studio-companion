@@ -36,6 +36,23 @@
     <string name="qr_title">Código de Emparejamiento</string>
     <string name="qr_description">Escanee este código con la aplicación móvil para conectar</string>
     <string name="qr_waiting_host">Esperando conexión del móvil…</string>
+    <string name="qr_scanner_title">Escanear Código QR</string>
+    <string name="qr_scanner_overlay_hint">Alinee el código QR del Host dentro del marco</string>
+    <string name="qr_scanner_searching">Buscando código QR…</string>
+    <string name="qr_scanner_connecting">Código detectado, conectando…</string>
+
+    <!-- Permisos de Cámara (RNF-003, Principio 8) -->
+    <string name="permission_camera_title">Permiso de Cámara Requerido</string>
+    <string name="permission_camera_description">Virtual Studio Companion necesita acceso a la cámara para capturar video y escanear el código QR de emparejamiento.</string>
+    <string name="permission_camera_denied_permanent">El permiso de cámara fue denegado de forma permanente. Debe habilitarlo en los Ajustes del sistema para continuar.</string>
+    <string name="action_open_settings">Abrir Ajustes</string>
+    <string name="action_grant_permission">Conceder Permiso</string>
+    <string name="action_back">Volver</string>
+
+    <!-- HUD y Transmisión Móvil (RF-003, RF-004) -->
+    <string name="action_disconnect_hud">Finalizar Transmisión</string>
+    <string name="thermal_alert_warning">Alerta Térmica: Reduciendo captura a 30 FPS</string>
+    <string name="camera_hud_zoom">Zoom</string>
 
     <!-- Errores Tipados -->
     <string name="error_connection_failed">Error al establecer la conexión con el Host</string>

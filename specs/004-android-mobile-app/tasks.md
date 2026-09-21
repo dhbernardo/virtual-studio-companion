@@ -4,7 +4,7 @@
 - [x] **T01: Pruebas unitarias para el analizador de código QR con ML Kit**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`  
   *Hecho cuando:* `androidApp/src/test/.../QrCodeImageAnalyzerTest.kt` valide que al recibir un Barcode con valor `vcam://pair?...` se extraigan los datos y se invoque el callback con la configuración correcta.
-- [ ] **T02: Implementación de `QrCodeImageAnalyzer`, `QrScannerScreen` y `PermissionScreen`**  
+- [x] **T02: Implementación de `QrCodeImageAnalyzer`, `QrScannerScreen` y `PermissionScreen`**  
   *Requisitos cubiertos:* `RF-001`, `RNF-003`, `RNF-004` (Constitución Principio 8)  
   *Hecho cuando:* La pantalla de escaneo detecte el código QR en tiempo real, gestione exclusivamente el permiso `CAMERA` y exhiba la vista de contingencia con `Res.string.*` ante rechazos permanentes.
 
