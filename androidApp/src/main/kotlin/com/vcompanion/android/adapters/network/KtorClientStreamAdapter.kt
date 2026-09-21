@@ -13,6 +13,7 @@ import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,6 +96,10 @@ class KtorClientStreamAdapter(
                             }
                         }
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    _incomingMessages.emit(ProtocolMessage.DisconnectRequest(reason = e.message ?: "Connection error"))
                 } finally {
                     controlSession = null
                     if (!controlReadyJob.isCompleted) controlReadyJob.complete()
@@ -109,6 +114,10 @@ class KtorClientStreamAdapter(
                             // Stream WebSocket is mainly for outbound binary frames
                         }
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    // Safe handling of stream connection errors
                 } finally {
                     streamSession = null
                 }

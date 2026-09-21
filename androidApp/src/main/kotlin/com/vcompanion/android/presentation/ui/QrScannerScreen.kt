@@ -44,6 +44,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.style.TextAlign
@@ -372,17 +374,11 @@ private fun ScannerOverlay(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        Box(
+        Canvas(
             modifier = Modifier
-                .size(260.dp)
-                .border(
-                    width = 2.dp,
-                    color = StudioTheme.colors.standbyAccent,
-                    shape = RoundedCornerShape(16.dp)
-                )
-        )
-
-        Canvas(modifier = Modifier.fillMaxSize()) {
+                .fillMaxSize()
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+        ) {
             val cutOutSize = 260.dp.toPx()
             val left = (size.width - cutOutSize) / 2
             val top = (size.height - cutOutSize) / 2
@@ -400,5 +396,15 @@ private fun ScannerOverlay(
                 blendMode = BlendMode.Clear
             )
         }
+
+        Box(
+            modifier = Modifier
+                .size(260.dp)
+                .border(
+                    width = 2.dp,
+                    color = StudioTheme.colors.standbyAccent,
+                    shape = RoundedCornerShape(16.dp)
+                )
+        )
     }
 }

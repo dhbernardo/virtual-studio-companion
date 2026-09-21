@@ -28,8 +28,8 @@
   *Hecho cuando:* La pantalla combine la vista previa con los componentes compartidos (`StudioBadge`, `TelemetryPill`, `StudioIndicator`, `CameraControlBar`), mantenga la pantalla activa durante el streaming y despache `DISCONNECT_REQUEST` al salir.
 
 ## Fase 4: Optimización de Resiliencia del Escáner QR y Contingencia Manual
-- [x] **T08: Robustecimiento de ML Kit y Fallback Manual por IP/Token**  
+- [x] **T08: Robustecimiento de ML Kit, Política Cleartext y Visor Transparente**  
   *Requisitos cubiertos:* `RF-001`, `RF-006`, `RNF-001`, `RNF-004` (Constitución Principio 8)  
-  *Hecho cuando:* Se declare `com.google.mlkit.vision.DEPENDENCIES = barcode` en `AndroidManifest.xml`, `BarcodeScannerOptions` restrinja a `Barcode.FORMAT_QR_CODE` con captura de excepciones, el `cameraExecutor` no sea cerrado prematuramente ante recomposiciones en `QrScannerScreen.kt`, se ofrezca un diálogo de ingreso manual de IP/Token con strings centralizados en `Res.string.*`, y las pruebas unitarias en `QrCodeImageAnalyzerTest` y `QrScannerViewModelTest` pasen al 100%.
+  *Hecho cuando:* Se declare `com.google.mlkit.vision.DEPENDENCIES = barcode` y `network_security_config.xml` con soporte Cleartext en `AndroidManifest.xml`, `KtorClientStreamAdapter` capture excepciones de red en corrutinas de forma resiliente, `ScannerOverlay` utilice `CompositingStrategy.Offscreen` para garantizar nitidez y transparencia en el visor de escaneo, se ofrezca un diálogo de ingreso manual de IP/Token con strings centralizados en `Res.string.*`, y las pruebas unitarias en `QrCodeImageAnalyzerTest`, `QrScannerViewModelTest` y `KtorClientStreamAdapterTest` pasen al 100%.
 
 

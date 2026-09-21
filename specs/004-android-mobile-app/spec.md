@@ -17,6 +17,12 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **DADO QUE** el analizador de ML Kit reporta una falla interna o el modelo no está listo
   - **CUANDO** se invoca el listener de falla
   - **ENTONCES** debe propagar el estado de error al ViewModel para advertir al usuario sin colapsar el pipeline de análisis ni cerrar prematuramente el ejecutor.
+  - **DADO QUE** el visor de escaneo se superpone a la vista previa de la cámara
+  - **CUANDO** se renderiza la máscara de oscurecimiento (`ScannerOverlay`)
+  - **ENTONCES** debe utilizar una estrategia de composición fuera de pantalla (`CompositingStrategy.Offscreen`) para que el recorte central preserve la transparencia completa sobre el `PreviewView` sin exponer el fondo negro de la ventana.
+  - **DADO QUE** la app se conecta al Host de escritorio en la red Wi-Fi local mediante WebSockets en texto claro (`ws://`)
+  - **CUANDO** se inicia la conexión de red
+  - **ENTONCES** debe permitir tráfico en texto plano (`cleartextTrafficPermitted`) mediante `network_security_config.xml` para subredes locales, y capturar de forma segura las excepciones de red en corrutinas evitando el cierre inesperado del proceso.
 
 ### RF-002: Pipeline de Captura y Codificación de Video por Hardware
 - **Tipo:** Ubiquitous

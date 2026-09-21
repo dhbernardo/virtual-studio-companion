@@ -72,5 +72,7 @@ graph TD
 - **Descarga de Modelo ML Kit:** Inclusión de `com.google.mlkit.vision.DEPENDENCIES = barcode` en `AndroidManifest.xml` para asegurar que Google Play Services instale el modelo inmediatamente.
 - **Optimización de Sensor y Formato:** Restricción a `Barcode.FORMAT_QR_CODE` para acelerar el procesamiento de cada fotograma de CameraX.
 - **Aislamiento de Ciclo de Vida:** Control del ciclo de vida del ejecutor en `QrScannerScreen` evitando apagados prematuros por recomposición.
+- **Recorte Transparente en Compose:** Uso de `Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)` en el `Canvas` de `ScannerOverlay` para evitar que `BlendMode.Clear` perfore hasta la ventana nativa negra.
+- **Tráfico Local Seguro (Cleartext Policy):** Configuración de `network_security_config.xml` vinculada en `AndroidManifest.xml` permitiendo tráfico sin cifrar (`cleartextTrafficPermitted="true"`) exclusivamente para conexiones locales `ws://` / `http://` en subredes privadas, junto con captura resiliente de excepciones de red en corrutinas.
 - **Fallback Manual:** Diálogo modal Compose que permite introducir `host`, `port` y `token` de forma manual consumiendo recursos de `Res.string.*`.
 
