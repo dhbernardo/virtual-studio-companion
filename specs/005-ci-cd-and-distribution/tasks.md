@@ -4,7 +4,7 @@
 - [x] **T01: Creación del archivo de workflow `.github/workflows/ci-cd.yml` con topología de 3 jobs**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`, `RNF-002`  
   *Hecho cuando:* El archivo YAML defina los jobs `build-android-and-shared`, `build-desktop-windows` y `publish-release`, configure JDK 21 Temurin, `chmod +x gradlew` en Linux y `permissions: contents: write` en el job de Release.
-- [ ] **T02: Verificación de calidad, auditoría y pruebas unitarias desacopladas**  
+- [x] **T02: Verificación de calidad, auditoría y pruebas unitarias desacopladas**  
   *Requisitos cubiertos:* `RF-002`, `RNF-003`, `RNF-004` (Constitución Principios 3 y 8)  
   *Hecho cuando:* El runner de Ubuntu ejecute `ktlintCheck`, `:shared:allTests` y `:androidApp:testDebugUnitTest`; y el runner de Windows ejecute `:shared:desktopTest` y `:desktopApp:desktopTest`.
 
