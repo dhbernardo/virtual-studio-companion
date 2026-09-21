@@ -15,6 +15,7 @@ desktopApp/src/desktopMain/kotlin/com/vcompanion/desktop/
 │   │   └── DesktopHostViewModel.kt    # MVVM con StateFlow (RTT latency, token TTL, OBS status)
 │   └── ui/
 │       ├── MainWindow.kt              # Ventana principal Compose Desktop con onCloseRequest
+│       ├── QrCanvasRenderer.kt        # Generación de matriz QR vía ZXing Core y renderizado en Compose Canvas
 │       ├── QrPairingView.kt           # Vista de espera, QR renderizado y cuenta regresiva TTL (120s)
 │       └── StreamingDashboardView.kt  # StudioCounterCard (FPS/bitrate/RTT), StudioBadge y StudioIndicator
 └── Main.kt                            # Composition Root: inyección e inicio
@@ -85,3 +86,12 @@ compose.desktop {
 - Pruebas de Ktor Server con `testApplication` verificando enlace dinámico ante puertos ocupados y despacho de `Ping`/`Pong`.
 - Mocks para OBS WebSocket v5 verificando el protocolo de autenticación SHA256 y la solicitud `CreateInput` con `browser_source`.
 - Pruebas con Turbine sobre `DesktopHostViewModel` validando transiciones de estado, TTL y `onCloseRequest`.
+- Pruebas unitarias de codificación y decodificación round-trip de QR en `QrCanvasRendererTest` con ZXing.
+
+---
+
+## 5. Arquitectura de Generación QR (ZXing Core & Compose Canvas)
+- **Biblioteca:** `com.google.zxing:core` (Apache 2.0), empaquetada en el micro-runtime por `jpackage`.
+- **Generación:** `QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, 0, 0, hints)` genera una `BitMatrix` pura en memoria respetando rigurosamente ISO/IEC 18004.
+- **Renderizado:** Composable `@Composable QrCodeCanvas` mapea la `BitMatrix` de dimensiones dinámicas sobre un `Canvas` vectorial de Compose con colores del tema activo (`StudioTheme.colors`).
+

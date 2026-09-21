@@ -28,3 +28,10 @@
 - [x] **T07: Configuración y verificación de empaquetado `jpackage` a `.exe` / `.msi`**  
   *Requisitos cubiertos:* `RF-005`, `RNF-001`  
   *Hecho cuando:* La ejecución de `./gradlew :desktopApp:packageMsi` o `packageExe` genere el instalador ejecutable autocontenido en `desktopApp/build/compose/binaries/main/` sin requerir Java en el sistema.
+
+## Fase 5: Conformidad Estándar QR y Resiliencia Óptica
+- [x] **T08: Generación estandarizada de Código QR con ZXing Core (ISO/IEC 18004)**  
+  *Requisitos cubiertos:* `RF-002`, `RNF-004` (Constitución Principios 3 y 4)  
+  *Hecho cuando:* Se integre `com.google.zxing:core` (Apache 2.0) en `desktopApp`, `QrCanvasRendererTest` valide la generación y decodificación round-trip de payloads `vcam://pair?...` sin pérdida de datos, y el código QR renderizado en `QrCodeCanvas` sea decodificable por cualquier lector estándar.
+
+

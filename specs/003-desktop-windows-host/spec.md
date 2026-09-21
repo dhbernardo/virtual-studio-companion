@@ -20,11 +20,11 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
 
 ### RF-002: Renderizado Visual del Código QR y Temporizador de Token
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el Host no cuente con una sesión móvil activa, el sistema DEBE renderizar en la interfaz Compose Desktop un Código QR con la URI estandarizada `vcam://pair?...` generada por `GeneratePairingPayloadUseCase`, mostrando un temporizador visual de cuenta regresiva del TTL del token (120 segundos) y un botón de refresco manual.
+- **Definición:** CUANDO el Host no cuente con una sesión móvil activa, el sistema DEBE renderizar en la interfaz Compose Desktop un Código QR con la URI estandarizada `vcam://pair?...` generada por `GeneratePairingPayloadUseCase`, generado en estricta conformidad con el estándar internacional **ISO/IEC 18004** mediante una biblioteca permisiva (**ZXing Core**, Apache 2.0), mostrando un temporizador visual de cuenta regresiva del TTL del token (120 segundos) y un botón de refresco manual.
 - **Criterio de Aceptación:**
   - **DADO QUE** el servidor está a la espera de conexión
   - **CUANDO** se muestra la vista de emparejamiento
-  - **ENTONCES** debe exhibir el QR renderizado, la IP física y el puerto activos legibles, y una barra/indicador con los 120 segundos de validez restante.
+  - **ENTONCES** debe exhibir el QR renderizado conforme a ISO/IEC 18004 garantizando decodificación óptica inmediata en lectores móviles, la IP física y el puerto activos legibles, y una barra/indicador con los 120 segundos de validez restante.
   - **DADO QUE** transcurren los 120 segundos sin que el móvil complete el handshake
   - **CUANDO** expira el temporizador
   - **ENTONCES** debe regenerar automáticamente un nuevo token efímero y actualizar el QR sin intervención del usuario.

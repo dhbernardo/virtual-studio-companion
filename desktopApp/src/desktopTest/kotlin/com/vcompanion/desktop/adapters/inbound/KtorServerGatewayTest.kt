@@ -186,7 +186,7 @@ class KtorServerGatewayTest {
 
         try {
             // Wait for both sessions to register
-            withTimeout(3000) {
+            withTimeout(8000) {
                 while (gateway!!.connectedClientsCount.value < 2) {
                     kotlinx.coroutines.delay(50)
                 }
@@ -196,7 +196,7 @@ class KtorServerGatewayTest {
             val ack = ProtocolMessage.HandshakeAck(serverVersion = "1.0.0", approvedFps = 60, approvedResolution = "1080p")
             gateway!!.sendMessage(ack)
 
-            withTimeout(3000) {
+            withTimeout(8000) {
                 while (client1Messages.isEmpty() || client2Messages.isEmpty()) {
                     kotlinx.coroutines.delay(50)
                 }

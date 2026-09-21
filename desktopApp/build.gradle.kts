@@ -28,6 +28,7 @@ kotlin {
                 implementation(libs.ktor.client.websockets)
                 implementation(libs.kotlinx.coroutines.swing)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.zxing.core)
             }
         }
 
@@ -38,6 +39,7 @@ kotlin {
                 implementation(libs.mockk)
                 implementation(libs.turbine)
                 implementation(libs.ktor.server.test.host)
+                implementation(libs.zxing.core)
             }
         }
     }

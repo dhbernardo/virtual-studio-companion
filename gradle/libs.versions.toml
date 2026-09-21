@@ -22,6 +22,9 @@ androidx-lifecycle = "2.8.2"
 androidx-camera = "1.3.4"
 google-mlkit-barcode = "17.3.0"
 
+# Utilities (Apache 2.0)
+zxing = "3.5.3"
+
 # Testing Frameworks (Apache 2.0)
 mockk = "1.13.12"
 turbine = "1.1.0"
@@ -55,6 +58,9 @@ androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.r
 androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "androidx-camera" }
 androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "androidx-camera" }
 google-mlkit-barcode-scanning = { module = "com.google.mlkit:barcode-scanning", version.ref = "google-mlkit-barcode" }
+
+# QR Code Desktop (Apache 2.0)
+zxing-core = { module = "com.google.zxing:core", version.ref = "zxing" }
 
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
