@@ -13,7 +13,7 @@
   *Requisitos cubiertos:* `RF-002`, `RNF-001`, `RNF-002` (AGENTS.md Regla 4)  
   *Hecho cuando:* Se configure CameraX a 1080p, se codifiquen frames H.264 acelerados por hardware en un hilo dedicado y se transmitan sobre `/ws/stream` sin penalizar el hilo de Compose.
 - [x] **T04: Adaptador de telemetría y responder de Ping/Pong RTT (`AndroidTelemetryProvider` / `KtorClientStreamAdapter`)**  
-  *Requisitos cubiertos:* `RF-004`  
+  *Requisitos cubiertos:* `RF-004`, `RNF-005`  
   *Hecho cuando:* El cliente de red responda inmediatamente enviando `ProtocolMessage.Pong` ante paquetes `Ping` del Host y emita periódicamente telemetría con batería y estado térmico.
 
 ## Fase 3: ViewModels, HUD de Transmisión y Comandos Remotos
@@ -29,7 +29,7 @@
 
 ## Fase 4: Optimización de Resiliencia del Escáner QR y Contingencia Manual
 - [x] **T08: Robustecimiento de ML Kit, Política Cleartext y Visor Transparente**  
-  *Requisitos cubiertos:* `RF-001`, `RF-006`, `RNF-001`, `RNF-004` (Constitución Principio 8)  
+  *Requisitos cubiertos:* `RF-001`, `RNF-004`, `RNF-005` (Constitución Principio 8)  
   *Hecho cuando:* Se declare `com.google.mlkit.vision.DEPENDENCIES = barcode` y `network_security_config.xml` con soporte Cleartext en `AndroidManifest.xml`, `KtorClientStreamAdapter` capture excepciones de red en corrutinas de forma resiliente, `ScannerOverlay` utilice `CompositingStrategy.Offscreen` para garantizar nitidez y transparencia en el visor de escaneo, se ofrezca un diálogo de ingreso manual de IP/Token con strings centralizados en `Res.string.*`, y las pruebas unitarias en `QrCodeImageAnalyzerTest`, `QrScannerViewModelTest` y `KtorClientStreamAdapterTest` pasen al 100%.
 
 

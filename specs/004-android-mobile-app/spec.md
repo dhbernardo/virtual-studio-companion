@@ -7,11 +7,11 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
 
 ## 2. Requisitos Funcionales (EARS)
 
-### RF-001: Escáner Óptico de Código QR con ML Kit
-- **Tipo:** Event-driven
-- **Definición:** CUANDO el usuario apunte la cámara hacia el Código QR expuesto por el Host en Windows, el analizador de frames de ML Kit DEBE extraer la URI de conexión (`vcam://pair?...`), empleando un cliente optimizado específicamente para `Barcode.FORMAT_QR_CODE`, con declaración explícita de descarga de dependencias en `AndroidManifest.xml` (`com.google.mlkit.vision.DEPENDENCIES = barcode`), validar el esquema mediante `ParsePairingPayloadUseCase` e iniciar la conexión automática sin intervención manual.
+### RF-001: Mecanismo de Emparejamiento (Escaneo Óptico QR y Contingencia Manual)
+- **Tipo:** Event-driven & User-driven
+- **Definición:** El sistema DEBE proveer un mecanismo integral de emparejamiento con el Host en Windows que soporte tanto detección óptica instantánea mediante **Google ML Kit** (`Barcode.FORMAT_QR_CODE`) sobre la URI de conexión (`vcam://pair?...`) con visor de recorte transparente, como contingencia manual mediante un diálogo modal Compose para el ingreso directo de IP, puerto y token, validando el esquema a través de `ParsePairingPayloadUseCase` e iniciando la conexión sin requerir escaneo óptico si las condiciones del sensor o iluminación lo impiden.
 - **Criterio de Aceptación:**
-  - **DADO QUE** se detecta un QR válido en el encuadre
+  - **DADO QUE** se detecta un Código QR válido en el encuadre
   - **CUANDO** ML Kit extrae la cadena
   - **ENTONCES** debe invocar `ParsePairingPayloadUseCase`, pasar la configuración al ViewModel y transitar a la pantalla de transmisión en menos de 300 ms tras la detección.
   - **DADO QUE** el analizador de ML Kit reporta una falla interna o el modelo no está listo
@@ -20,9 +20,12 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **DADO QUE** el visor de escaneo se superpone a la vista previa de la cámara
   - **CUANDO** se renderiza la máscara de oscurecimiento (`ScannerOverlay`)
   - **ENTONCES** debe utilizar una estrategia de composición fuera de pantalla (`CompositingStrategy.Offscreen`) para que el recorte central preserve la transparencia completa sobre el `PreviewView` sin exponer el fondo negro de la ventana.
-  - **DADO QUE** la app se conecta al Host de escritorio en la red Wi-Fi local mediante WebSockets en texto claro (`ws://`)
-  - **CUANDO** se inicia la conexión de red
-  - **ENTONCES** debe permitir tráfico en texto plano (`cleartextTrafficPermitted`) mediante `network_security_config.xml` para subredes locales, y capturar de forma segura las excepciones de red en corrutinas evitando el cierre inesperado del proceso.
+  - **DADO QUE** el usuario experimenta dificultades ópticas o de enfoque
+  - **CUANDO** pulsa la acción de ingreso manual en la pantalla de escaneo
+  - **ENTONCES** debe desplegar un diálogo modal con campos para IP, puerto y token de sesión, consumiendo el 100% de sus textos desde `Res.string.*`.
+  - **DADO QUE** el usuario introduce parámetros válidos en el diálogo manual
+  - **CUANDO** pulsa "Conectar"
+  - **ENTONCES** debe validar los campos, construir un `PairingConfig` y transitar inmediatamente a la pantalla de transmisión.
 
 ### RF-002: Pipeline de Captura y Codificación de Video por Hardware
 - **Tipo:** Ubiquitous
@@ -66,17 +69,6 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
   - **CUANDO** se suspende temporalmente el Activity
   - **ENTONCES** debe pausar el flujo de video y notificar al Host para transitar a `RECONNECTING` sin abortar bruscamente la conexión de red.
 
-### RF-006: Fallback de Emparejamiento Manual por IP y Token
-- **Tipo:** User-driven
-- **Definición:** CUANDO el usuario experimente dificultades ópticas (reflejos, cámara dañada o condiciones de iluminación deficientes), la interfaz DEBE permitir la apertura de un diálogo modal para ingresar directamente la dirección IP del Host, puerto y token de sesión, validándolos y conectando de forma equivalente al escaneo del QR.
-- **Criterio de Aceptación:**
-  - **DADO QUE** el usuario se encuentra en la pantalla de escaneo
-  - **CUANDO** pulsa la acción de ingreso manual
-  - **ENTONCES** debe desplegar un diálogo con campos para IP, puerto y token, consumiendo todos sus textos de `Res.string.*`.
-  - **DADO QUE** el usuario introduce parámetros válidos
-  - **CUANDO** pulsa "Conectar"
-  - **ENTONCES** debe construir un `PairingConfig` y transitar inmediatamente a la pantalla de transmisión.
-
 ---
 
 ## 3. Requisitos No Funcionales (RNF)
@@ -85,3 +77,4 @@ Implementar la aplicación móvil para Android en el módulo `androidApp` aplica
 - **RNF-002 (Gestión Térmica y de Batería con Codecs de Hardware):** El codificador debe emplear aceleración por hardware (`MediaCodec` con perfil H.264 Baseline/Main) para minimizar la carga de CPU y el consumo de batería en transmisiones continuas.
 - **RNF-003 (Solicitud Mínima y Contingencia de Permisos):** La app debe solicitar exclusivamente el permiso `android.permission.CAMERA` mediante `rememberLauncherForActivityResult`. Si el usuario deniega el permiso de forma permanente (*Permanently Denied*), debe mostrar una pantalla de contingencia con textos explicativos provenientes de `Res.string.*` y un botón de navegación directa hacia `Settings.ACTION_APPLICATION_DETAILS_SETTINGS` (Constitución Principio 8).
 - **RNF-004 (Conformidad de Tema y Cero Hardcoded Strings):** La aplicación móvil debe encapsularse bajo `StudioTheme`, respetar el modo oscuro/claro del sistema y consumir el 100% de textos, etiquetas y descripciones accesibles a través de `Res.string.*` (Constitución Principios 5 y 8).
+- **RNF-005 (Política de Tráfico Local y Resiliencia de Conexión):** La aplicación debe permitir tráfico en texto plano (`cleartextTrafficPermitted="true"`) mediante `network_security_config.xml` vinculado en `AndroidManifest.xml` exclusivamente para subredes privadas locales (HTTP y WebSockets `ws://`), y capturar de forma segura las excepciones de red en corrutinas (`KtorClientStreamAdapter`) evitando cualquier cierre inesperado del proceso ante cortes o desconexiones del Host.
