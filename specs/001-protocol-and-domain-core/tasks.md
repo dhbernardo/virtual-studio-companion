@@ -9,7 +9,7 @@
   *Hecho cuando:* `GeneratePairingPayloadUseCase`, `ParsePairingPayloadUseCase` y `ValidateSessionTokenUseCase` pasen el 100% de las pruebas unitarias de `T01`.
 
 ## Fase 2: Máquina de Estados de Conexión (FSM)
-- [ ] **T03: Pruebas unitarias para la máquina de estados con Turbine**  
+- [x] **T03: Pruebas unitarias para la máquina de estados con Turbine**  
   *Requisitos cubiertos:* `RF-002`, `RNF-001`  
   *Hecho cuando:* `shared/src/commonTest/.../ConnectionStateMachineTest.kt` valide las transiciones permitidas (`DISCONNECTED -> PAIRING -> CONNECTED -> STREAMING`), el manejo de timeout en `RECONNECTING` (10s hacia `DISCONNECTED`), la desconexión limpia (`DISCONNECT_REQUEST`) y la transición a `ERROR(ConnectionError)`.
 - [ ] **T04: Implementación de `ConnectionStateMachine` y contratos de puertos**  
