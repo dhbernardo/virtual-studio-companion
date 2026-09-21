@@ -20,7 +20,7 @@
 - [x] **T05: Implementación de `DesktopHostViewModel` y pruebas con Turbine**  
   *Requisitos cubiertos:* `RF-002`, `RF-004`  
   *Hecho cuando:* El ViewModel exponga el cálculo de RTT, el temporizador de TTL del token (120 s) y despache `CameraCommand` tipados hacia el gateway.
-- [ ] **T06: Vistas Compose Desktop (`MainWindow`, `QrPairingView`, `StreamingDashboardView`)**  
+- [x] **T06: Vistas Compose Desktop (`MainWindow`, `QrPairingView`, `StreamingDashboardView`)**  
   *Requisitos cubiertos:* `RF-002`, `RF-004`, `RNF-004` (Constitución Principios 5 y 8)  
   *Hecho cuando:* La ventana renderice el QR con cuenta regresiva, el dashboard consuma `StudioCounterCard`, `StudioBadge` y `StudioIndicator`, y el cierre de ventana (`onCloseRequest`) despache `DISCONNECT_REQUEST` ordenadamente.
 

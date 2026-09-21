@@ -43,4 +43,22 @@
     <string name="error_token_already_used">El token de sesión ya fue utilizado</string>
     <string name="error_hardware_unsupported">El hardware no soporta esta acción</string>
     <string name="error_value_out_of_range">Valor de comando fuera de rango permitido</string>
+
+    <!-- Desktop Host UI (RF-002, RF-003, RF-004) -->
+    <string name="desktop_window_title">Virtual Studio Companion Host</string>
+    <string name="desktop_obs_connected">OBS Conectado</string>
+    <string name="desktop_obs_disconnected">OBS Desconectado</string>
+    <string name="desktop_obs_connecting">OBS Conectando…</string>
+    <string name="desktop_obs_error">OBS Error</string>
+    <string name="desktop_action_connect_obs">Conectar OBS</string>
+    <string name="desktop_host_address_label">Dirección Local:</string>
+    <string name="desktop_token_expires_label">Validez del Token:</string>
+    <string name="desktop_seconds_suffix">s</string>
+    <string name="desktop_action_refresh_qr">Regenerar Token</string>
+    <string name="desktop_session_info_label">Dispositivo:</string>
+    <string name="desktop_battery_label">Batería:</string>
+    <string name="desktop_charging_status">Cargando</string>
+    <string name="desktop_camera_controls_title">Controles de Cámara</string>
+    <string name="desktop_zoom_level">Zoom</string>
+    <string name="desktop_default_device">Dispositivo Android</string>
 </resources>

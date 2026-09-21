@@ -1,33 +1,41 @@
 package com.vcompanion.desktop
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import com.vcompanion.desktop.adapters.inbound.KtorServerGateway
+import com.vcompanion.desktop.adapters.outbound.ObsWebSocketAdapter
+import com.vcompanion.desktop.presentation.ui.MainWindow
+import com.vcompanion.desktop.presentation.viewmodel.DesktopHostViewModel
 import com.vcompanion.shared.resources.Res
-import com.vcompanion.shared.resources.app_name
+import com.vcompanion.shared.resources.desktop_window_title
+import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.stringResource
 
 fun main() = application {
-    val windowState = rememberWindowState(width = 800.dp, height = 600.dp)
+    val windowState = rememberWindowState(width = 900.dp, height = 700.dp)
+
+    val gateway = remember { KtorServerGateway() }
+    val obsConnector = remember { ObsWebSocketAdapter() }
+    val viewModel = remember {
+        val port = runBlocking { gateway.start(8080, 8090) }
+        DesktopHostViewModel(
+            gateway = gateway,
+            obsConnector = obsConnector,
+            effectivePort = port
+        )
+    }
+
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            viewModel.onClose()
+            exitApplication()
+        },
         state = windowState,
-        title = "Virtual Studio Companion Host"
+        title = stringResource(Res.string.desktop_window_title)
     ) {
-        MaterialTheme {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = stringResource(Res.string.app_name))
-            }
-        }
+        MainWindow(viewModel = viewModel)
     }
 }
