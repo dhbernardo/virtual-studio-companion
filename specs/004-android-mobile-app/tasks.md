@@ -6,15 +6,15 @@
   *Hecho cuando:* `androidApp/src/test/.../QrCodeImageAnalyzerTest.kt` valide que al recibir un Barcode con valor `vcam://pair?...` se extraigan los datos y se invoque el callback con la configuración correcta.
 - [x] **T02: Implementación de `QrCodeImageAnalyzer`, `QrScannerScreen` y `PermissionScreen`**  
   *Requisitos cubiertos:* `RF-001`, `RNF-003`, `RNF-004` (Constitución Principio 8)  
-  *Hecho cuando:* La pantalla de escaneo detecte el código QR en tiempo real, gestione exclusivamente el permiso `CAMERA` y exhiba la vista de contingencia con `Res.string.*` ante rechazos permanentes.
+  *Hecho cuando:* La pantalla de escaneo detecte el código QR en tiempo real, gestione exclusivamente el permiso `CAMERA`, provea y consuma el método `consumeScannedConfig()` para evitar saltos repetitivos de navegación, y exhiba la vista de contingencia con `Res.string.*` ante rechazos permanentes.
 
 ## Fase 2: Pipeline de Captura y Codificación de Video por Hardware
 - [x] **T03: Adaptador de captura de video con `MediaCodec` H.264 (`CameraXCaptureAdapter`)**  
   *Requisitos cubiertos:* `RF-002`, `RNF-001`, `RNF-002` (AGENTS.md Regla 4)  
   *Hecho cuando:* Se configure CameraX a 1080p, se codifiquen frames H.264 acelerados por hardware en un hilo dedicado y se transmitan sobre `/ws/stream` sin penalizar el hilo de Compose.
 - [x] **T04: Adaptador de telemetría y responder de Ping/Pong RTT (`AndroidTelemetryProvider` / `KtorClientStreamAdapter`)**  
-  *Requisitos cubiertos:* `RF-004`, `RNF-005`  
-  *Hecho cuando:* El cliente de red responda inmediatamente enviando `ProtocolMessage.Pong` ante paquetes `Ping` del Host y emita periódicamente telemetría con batería y estado térmico.
+  *Requisitos cubiertos:* `RF-004`, `RF-005`, `RNF-005`  
+  *Hecho cuando:* El cliente de red responda inmediatamente enviando `ProtocolMessage.Pong` ante paquetes `Ping` del Host, emita periódicamente telemetría con batería y estado térmico, y capture el cierre del canal entrante de Ktor emitiendo `DisconnectRequest("SERVER_CLOSED")` ante caída o terminación del Host.
 
 ## Fase 3: ViewModels, HUD de Transmisión y Comandos Remotos
 - [x] **T05: Pruebas unitarias para `CameraStreamViewModel` (TDD)**  
@@ -25,7 +25,7 @@
   *Hecho cuando:* El ViewModel integre los casos de uso compartidos, controle la linterna con validación previa de hardware (`hasFlashUnit()`) y apruebe el 100% de las pruebas de `T05`.
 - [x] **T07: Implementación de `CameraScreen` con HUD de Estudio y `FLAG_KEEP_SCREEN_ON`**  
   *Requisitos cubiertos:* `RF-003`, `RF-005`, `RNF-004` (Constitución Principios 5 y 8)  
-  *Hecho cuando:* La pantalla combine la vista previa con los componentes compartidos (`StudioBadge`, `TelemetryPill`, `StudioIndicator`, `CameraControlBar`), mantenga la pantalla activa durante el streaming y despache `DISCONNECT_REQUEST` al salir.
+  *Hecho cuando:* La pantalla combine la vista previa con los componentes compartidos (`StudioBadge`, `TelemetryPill`, `StudioIndicator`, `CameraControlBar` con iconos nítidos), mantenga la pantalla activa durante el streaming, reaccione al estado `Disconnected` liberando recursos y navegando a escaneo, despache `DISCONNECT_REQUEST` al salir, y gestione eventos `ON_STOP`/`ON_DESTROY` para notificar al Host y liberar CameraX.
 
 ## Fase 4: Optimización de Resiliencia del Escáner QR y Contingencia Manual
 - [x] **T08: Robustecimiento de ML Kit, Política Cleartext y Visor Transparente**  

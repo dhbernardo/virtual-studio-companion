@@ -47,10 +47,20 @@ sequenceDiagram
         Host->>Host: Calcula RTT = now - timestamp
     end
     Host->>Streamer: Renderiza StudioCounterCard (FPS, Bitrate, RTT Latency)
-    Streamer->>Host: Cierra ventana (onCloseRequest)
-    Host->>Phone: DISCONNECT_REQUEST
-    Host->>OBS: Desconecta WebSocket
-    Host->>Host: Apaga Ktor limpiamente
+    alt Streamer desconecta sesión desde Dashboard
+        Streamer->>Host: Click "Desconectar" (disconnectSession)
+        Host->>Phone: DISCONNECT_REQUEST("HOST_DISCONNECT")
+        Host->>Host: Transita a Disconnected, regenera token y reinicia ticker QR
+    else Phone cierra app o finaliza stream
+        Phone->>Host: DISCONNECT_REQUEST o cierre de WebSocket
+        Host->>Host: Ktor detecta cierre y emite DisconnectRequest("CLIENT_CLOSED")
+        Host->>Host: Transita a Disconnected, regenera token y reinicia ticker QR
+    else Streamer cierra ventana Windows (onCloseRequest)
+        Streamer->>Host: Cierra ventana (onClose)
+        Host->>Phone: DISCONNECT_REQUEST
+        Host->>OBS: Desconecta WebSocket
+        Host->>Host: Apaga Ktor limpiamente y finaliza proceso
+    end
 ```
 
 ---

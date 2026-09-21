@@ -28,7 +28,7 @@
 ## Fase 3: Componentes de Control de Estudio y Envoltorios
 - [x] **T07: Implementación de `CameraControlBar` con degradación elegante de Glassmorphism**  
   *Requisitos cubiertos:* `RF-004`, `RNF-001`  
-  *Hecho cuando:* La barra aplique `Modifier.blur` en Android 12+ / Desktop y fondo translúcido sólido al 85% en Android 8.0-11, respetando Touch Targets de 48dp y estados deshabilitados.
+  *Hecho cuando:* La barra aplique fondo translúcido al 85% y bordes sutiles sin aplicar desenfoque sobre los iconos hijos, garantizando nitidez de alto contraste, Touch Targets de 48dp y estados deshabilitados.
 - [x] **T08: Implementación de `QrCard`**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`  
   *Hecho cuando:* `QrCard` renderice un contenedor estilizado con bordes sutiles y elevación para albergar el código QR generado.

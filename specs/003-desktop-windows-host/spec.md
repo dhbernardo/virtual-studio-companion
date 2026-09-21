@@ -9,7 +9,7 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
 
 ### RF-001: Servidor Ktor Embebido, Fallback de Puertos y Gateway de Red
 - **Tipo:** Ubiquitous
-- **Definición:** El sistema DEBE levantar un servidor Ktor local embebido implementando el puerto `IStreamGateway`, intentando enlazar en el puerto por defecto `:8080` y buscando secuencialmente el siguiente puerto libre en el rango `8080-8090` ante colisiones de enlace (`BindException`), filtrando adaptadores virtuales de Windows (WSL, Hyper-V, VPN) para propagar la IP de la interfaz física activa a la URI de emparejamiento.
+- **Definición:** El sistema DEBE levantar un servidor Ktor local embebido implementando el puerto `IStreamGateway`, intentando enlazar en el puerto por defecto `:8080` y buscando secuencialmente el siguiente puerto libre en el rango `8080-8090` ante colisiones de enlace (`BindException`), filtrando adaptadores virtuales de Windows (WSL, Hyper-V, VPN) para propagar la IP de la interfaz física activa a la URI de emparejamiento. Asimismo, el gateway DEBE monitorizar el ciclo de vida de los sockets WebSocket y emitir un evento de desconexión tipado (`DisconnectRequest("CLIENT_CLOSED")`) cuando el cliente cierre la conexión o finalice el socket de control.
 - **Criterio de Aceptación:**
   - **DADO QUE** el Host arranca en Windows
   - **CUANDO** se inicializa el ciclo de vida del servidor
@@ -17,6 +17,9 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
   - **DADO QUE** el puerto 8080 está ocupado por otra aplicación
   - **CUANDO** Ktor captura la colisión
   - **ENTONCES** debe enlazar automáticamente en el siguiente puerto disponible (ej. `:8081`) y notificar el puerto efectivo al generador del Código QR sin abortar la aplicación.
+  - **DADO QUE** el cliente Android cierra o pierde su sesión de control WebSocket
+  - **CUANDO** el bloque de sesión de Ktor finaliza o se captura un cierre de canal
+  - **ENTONCES** debe emitir `ProtocolMessage.DisconnectRequest("CLIENT_CLOSED")` para que el Host retorne automáticamente a la pantalla de emparejamiento QR.
 
 ### RF-002: Renderizado Visual del Código QR y Temporizador de Token
 - **Tipo:** Event-driven
@@ -34,18 +37,21 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
 
 ### RF-003: Integración Automática con OBS Studio (OBS WebSocket API v5)
 - **Tipo:** Event-driven
-- **Definición:** CUANDO el Host detecte que OBS Studio está en ejecución (o al pulsar "Vincular con OBS"), el sistema DEBE conectarse al puerto `4455` implementando el puerto `IObsConnector`, autenticarse mediante desafío criptográfico SHA256 (si OBS tiene contraseña activada) y crear o actualizar de forma idempotente una fuente `"Browser Source"` (`inputKind = "browser_source"`) denominada `"Virtual Studio Camera"` en la escena activa.
+- **Definición:** CUANDO el Host detecte que OBS Studio está en ejecución (o al pulsar "Conectar OBS" tanto en la vista de emparejamiento como en el dashboard de transmisión activa), el sistema DEBE conectarse al puerto `4455` implementando el puerto `IObsConnector`, autenticarse mediante desafío criptográfico SHA256 (si OBS tiene contraseña activada) y crear o actualizar de forma idempotente una fuente `"Browser Source"` (`inputKind = "browser_source"`) denominada `"Virtual Studio Camera"` en la escena activa.
 - **Criterio de Aceptación:**
   - **DADO QUE** OBS Studio v5 requiere contraseña
   - **CUANDO** se recibe la solicitud de autenticación (`GetAuthRequired` / Hello auth)
   - **ENTONCES** debe resolver el desafío SHA256 utilizando la contraseña suministrada en la configuración de la UI y persistida localmente.
   - **DADO QUE** la autenticación concluye con éxito
-  - **CUANDO** se inicia la transmisión
+  - **CUANDO** se inicia la transmisión o se pulsa conectar en cualquier momento
   - **ENTONCES** debe verificar si `"Virtual Studio Camera"` existe previamente: si no existe, invocar `CreateInput`; si ya existe, invocar `SetInputSettings`, configurando la URL local (`http://localhost:<port>/stream/preview`) a 1080p y 60 FPS.
+  - **DADO QUE** la sesión móvil ya está emparejada pero OBS no estaba abierto o se desconectó
+  - **CUANDO** el usuario visualiza el dashboard de transmisión
+  - **ENTONCES** la UI debe exponer el botón "Conectar OBS" para permitir el enganche con OBS sin tener que reiniciar ni desemparejar el móvil.
 
-### RF-004: Dashboard de Telemetría, Latencia RTT y Comandos Tipados
+### RF-004: Dashboard de Telemetría, Latencia RTT, Comandos y Desconexión de Sesión
 - **Tipo:** Event-driven
-- **Definición:** CUANDO la transmisión esté activa, la interfaz de escritorio DEBE renderizar el dashboard utilizando los componentes compartidos `StudioCounterCard` (para FPS, bitrate y latencia RTT), `StudioBadge` (para estado de transmisión) y `StudioIndicator` (para estado del enlace con OBS), emitiendo paquetes `Ping` periódicos para medición de RTT y despachando comandos mediante la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)`.
+- **Definición:** CUANDO la transmisión esté activa, la interfaz de escritorio DEBE renderizar el dashboard utilizando los componentes compartidos `StudioCounterCard` (para FPS, bitrate y latencia RTT), `StudioBadge` (para estado de transmisión) y `StudioIndicator` (para estado del enlace con OBS), emitiendo paquetes `Ping` periódicos para medición de RTT, despachando comandos mediante la jerarquía sellada `ProtocolMessage.CommandPacket(CameraCommand)` y permitiendo la desconexión explícita de la sesión activa retornando inmediatamente a la pantalla de emparejamiento QR con un nuevo token sin abortar la aplicación Host.
 - **Criterio de Aceptación:**
   - **DADO QUE** el stream está activo
   - **CUANDO** Ktor opera el canal WebSocket
@@ -53,6 +59,9 @@ Implementar la aplicación de escritorio nativa para Windows en el módulo `desk
   - **DADO QUE** el streamer acciona un control en la UI de Windows (ej. alternar linterna o zoom)
   - **CUANDO** se despacha la orden
   - **ENTONCES** debe enviar el mensaje polimórfico tipado `{ "type": "COMMAND", "command": { "type": "TOGGLE_TORCH" } }` hacia el móvil.
+  - **DADO QUE** el usuario pulsa "Desconectar" en el dashboard de transmisión activa
+  - **CUANDO** se acciona el botón
+  - **ENTONCES** debe despachar `DISCONNECT_REQUEST` al móvil, transitar el estado a `Disconnected`, generar un nuevo token efímero, reactivar el temporizador de cuenta regresiva y exhibir la vista de emparejamiento QR sin cerrar la aplicación de escritorio.
   - **DADO QUE** el usuario cierra la ventana de Windows durante una transmisión activa (`onCloseRequest`)
   - **CUANDO** se procesa el evento de salida
   - **ENTONCES** debe despachar inmediatamente un paquete `DISCONNECT_REQUEST` al móvil, desconectar de OBS y apagar el servidor Ktor limpiamente antes de salir del proceso.
