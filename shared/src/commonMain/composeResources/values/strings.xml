@@ -1,13 +1,46 @@
 <resources>
+    <!-- App & General -->
     <string name="app_name">Virtual Studio Companion</string>
     <string name="action_connect">Conectar</string>
     <string name="action_disconnect">Desconectar</string>
+    <string name="action_retry">Reintentar</string>
+    <string name="action_settings">Ajustes</string>
+
+    <!-- Estado y Badges (RF-002) -->
     <string name="status_ready">Listo</string>
     <string name="status_streaming">Transmitiendo</string>
     <string name="status_disconnected">Desconectado</string>
+    <string name="status_offline">OFFLINE</string>
+    <string name="status_standby">STANDBY</string>
+    <string name="status_live">LIVE</string>
+    <string name="status_alert">ALERT</string>
+    <string name="status_rec">REC</string>
+
+    <!-- Telemetría y Métricas (RF-003, RF-007) -->
     <string name="label_bitrate">Bitrate</string>
     <string name="label_fps">FPS</string>
     <string name="label_latency">Latencia</string>
-    <string name="error_connection_failed">Error al establecer la conexión con el Host</string>
+    <string name="telemetry_placeholder">--- ms / -- FPS</string>
+    <string name="telemetry_latency_unit">ms</string>
+    <string name="telemetry_fps_unit">FPS</string>
+    <string name="telemetry_bitrate_unit">kbps</string>
+
+    <!-- Controles de Cámara (RF-004) -->
+    <string name="action_switch_camera">Cambiar cámara</string>
+    <string name="action_toggle_torch">Linterna</string>
+    <string name="action_zoom_in">Acercar zoom</string>
+    <string name="action_zoom_out">Alejar zoom</string>
+
+    <!-- Emparejamiento y QR (RF-001, RF-004) -->
     <string name="qr_scan_instruction">Escanee el código QR desde la aplicación móvil</string>
+    <string name="qr_title">Código de Emparejamiento</string>
+    <string name="qr_description">Escanee este código con la aplicación móvil para conectar</string>
+    <string name="qr_waiting_host">Esperando conexión del móvil…</string>
+
+    <!-- Errores Tipados -->
+    <string name="error_connection_failed">Error al establecer la conexión con el Host</string>
+    <string name="error_token_expired">El token de sesión ha expirado</string>
+    <string name="error_token_already_used">El token de sesión ya fue utilizado</string>
+    <string name="error_hardware_unsupported">El hardware no soporta esta acción</string>
+    <string name="error_value_out_of_range">Valor de comando fuera de rango permitido</string>
 </resources>

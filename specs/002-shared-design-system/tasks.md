@@ -7,7 +7,7 @@
 - [x] **T02: Implementación de `StudioTheme` con persistencia mediante `ThemePreferencesRepository`**  
   *Requisitos cubiertos:* `RF-001`, `RF-005`, `RNF-001`  
   *Hecho cuando:* El composable `StudioTheme` evalúe `isSystemInDarkTheme()`, exponga los tokens correctos, permita alternar entre `SYSTEM`, `DARK` y `LIGHT` y persista la preferencia en el repositorio reactivo.
-- [ ] **T02b: Creación del catálogo de recursos centralizados en `composeResources`**  
+- [x] **T02b: Creación del catálogo de recursos centralizados en `composeResources`**  
   *Requisitos cubiertos:* `RF-006` (Constitución Principio 8)  
   *Hecho cuando:* Se organicen `values/strings.xml`, `drawable/` (iconos vectoriales de control) y `font/`, garantizando cero strings, dimensiones fijas o rutas de dibujo en crudo en los composables.
 
