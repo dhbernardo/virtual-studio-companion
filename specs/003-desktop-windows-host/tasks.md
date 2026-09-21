@@ -17,7 +17,7 @@
   *Hecho cuando:* El adaptador resuelva el handshake autenticado en `ws://localhost:4455`, soporte reconexión con backoff exponencial y apruebe las pruebas de `T03`.
 
 ## Fase 3: Interfaz Gráfica Compose Desktop y ViewModel
-- [ ] **T05: Implementación de `DesktopHostViewModel` y pruebas con Turbine**  
+- [x] **T05: Implementación de `DesktopHostViewModel` y pruebas con Turbine**  
   *Requisitos cubiertos:* `RF-002`, `RF-004`  
   *Hecho cuando:* El ViewModel exponga el cálculo de RTT, el temporizador de TTL del token (120 s) y despache `CameraCommand` tipados hacia el gateway.
 - [ ] **T06: Vistas Compose Desktop (`MainWindow`, `QrPairingView`, `StreamingDashboardView`)**  
