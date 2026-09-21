@@ -17,7 +17,7 @@
   *Hecho cuando:* La FSM exponga un `StateFlow<ConnectionState>` inmutable y satisfaga el 100% de las aserciones de `T03`.
 
 ## Fase 3: Protocolo de Telemetría, Latencia RTT y Comandos de Cámara
-- [ ] **T05: Pruebas unitarias para serialización de `ProtocolMessage` y comandos remotos**  
+- [x] **T05: Pruebas unitarias para serialización de `ProtocolMessage` y comandos remotos**  
   *Requisitos cubiertos:* `RF-003`, `RF-004`, `RNF-003`  
   *Hecho cuando:* Se verifique el encode/decode JSON exacto de la jerarquía sellada `ProtocolMessage` (Handshake, TelemetryPacket, Ping, Pong, Disconnect), cálculo de RTT y validación de límites de `CameraCommand.SetZoom` (1.0 a 5.0) con emisión de `CommandErrorCode`.
 - [ ] **T06: Implementación del despachador de comandos y procesador de telemetría**  
