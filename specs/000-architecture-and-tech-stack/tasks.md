@@ -9,7 +9,7 @@
   *Hecho cuando:* La configuración raíz declare los repositorios oficiales (`mavenCentral()`, `google()`), aplique los plugins de KMP y Compose, soporte Configuration Cache y permita compilar Desktop aun en ausencia de `ANDROID_HOME`.
 
 ## Fase 2: Configuración del Módulo KMP Compartido (`:shared`)
-- [ ] **T03: Configuración de targets, pureza y dependencias en `shared/build.gradle.kts`**  
+- [x] **T03: Configuración de targets, pureza y dependencias en `shared/build.gradle.kts`**  
   *Requisitos cubiertos:* `RF-001`, `RF-002`, `RNF-001`  
   *Hecho cuando:* El archivo configure `androidTarget()` y `jvm("desktop")`, Java toolchain 21 con compatibilidad Java 17 en Android, agregando `kotlinx-coroutines-core` y `kotlinx-serialization-json` en `commonMainApi`, verificando la ausencia total de `android.*`, `java.*` y `kotlinx.cinterop.*`.
 - [ ] **T04: Creación de estructura de directorios y test base en `shared`**  
