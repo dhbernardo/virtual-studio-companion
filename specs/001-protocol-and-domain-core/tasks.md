@@ -4,7 +4,7 @@
 - [x] **T01: Pruebas unitarias para generación, parseo y validación de URI QR (TDD)**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`  
   *Hecho cuando:* `shared/src/commonTest/.../PairingPayloadTest.kt` contenga casos para URIs válidas (`vcam://pair?...`), validación de TTL (120 s), rechazo de tokens expirados o reusados, parseo de capacidades (`fps`, `res`) y `fallbackHosts`, fallando antes de implementar.
-- [ ] **T02: Implementación de modelos `PairingConfig` y casos de uso de emparejamiento**  
+- [x] **T02: Implementación de modelos `PairingConfig` y casos de uso de emparejamiento**  
   *Requisitos cubiertos:* `RF-001`, `RNF-001`, `RNF-003`  
   *Hecho cuando:* `GeneratePairingPayloadUseCase`, `ParsePairingPayloadUseCase` y `ValidateSessionTokenUseCase` pasen el 100% de las pruebas unitarias de `T01`.
 
