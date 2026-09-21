@@ -12,7 +12,7 @@
 - [x] **T03: Adaptador de captura de video con `MediaCodec` H.264 (`CameraXCaptureAdapter`)**  
   *Requisitos cubiertos:* `RF-002`, `RNF-001`, `RNF-002` (AGENTS.md Regla 4)  
   *Hecho cuando:* Se configure CameraX a 1080p, se codifiquen frames H.264 acelerados por hardware en un hilo dedicado y se transmitan sobre `/ws/stream` sin penalizar el hilo de Compose.
-- [ ] **T04: Adaptador de telemetría y responder de Ping/Pong RTT (`AndroidTelemetryProvider` / `KtorClientStreamAdapter`)**  
+- [x] **T04: Adaptador de telemetría y responder de Ping/Pong RTT (`AndroidTelemetryProvider` / `KtorClientStreamAdapter`)**  
   *Requisitos cubiertos:* `RF-004`  
   *Hecho cuando:* El cliente de red responda inmediatamente enviando `ProtocolMessage.Pong` ante paquetes `Ping` del Host y emita periódicamente telemetría con batería y estado térmico.
 
