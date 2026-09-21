@@ -54,6 +54,27 @@ class CameraStreamViewModelTest {
     }
 
     @Test
+    fun shouldInitializeInPairingStateWhenInitialConfigProvided() = runTest(testDispatcher) {
+        val config = PairingConfig(
+            host = "192.168.1.100",
+            port = 8080,
+            sessionToken = "tok_test_123"
+        )
+        val viewModel = CameraStreamViewModel(
+            streamGateway = gateway,
+            telemetryEmitter = telemetryEmitter,
+            initialConfig = config
+        )
+
+        viewModel.uiState.test {
+            val initial = awaitItem()
+            assertTrue(initial.connectionState is ConnectionState.Pairing)
+            assertEquals(config, (initial.connectionState as ConnectionState.Pairing).config)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
     fun shouldTransitionToStreamingStateWhenSessionStarts() = runTest(testDispatcher) {
         val viewModel = CameraStreamViewModel(
             streamGateway = gateway,

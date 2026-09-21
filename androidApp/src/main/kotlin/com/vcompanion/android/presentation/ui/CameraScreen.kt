@@ -87,6 +87,7 @@ fun CameraScreen(
             streamGateway = streamAdapter,
             telemetryEmitter = telemetryProvider,
             hasFlashUnit = true,
+            initialConfig = config,
             onApplyZoom = { ratio -> captureAdapter.applyZoomRatio(ratio) },
             onToggleTorch = { captureAdapter.toggleTorch(hasFlashUnit = true) },
             onSetFps = { fps -> captureAdapter.setTargetFps(fps) }
@@ -103,11 +104,23 @@ fun CameraScreen(
         }
     }
 
+    var hasActiveSession by remember { mutableStateOf(false) }
+
     // Reactive navigation on disconnection (RF-005)
     LaunchedEffect(uiState.connectionState) {
-        if (uiState.connectionState is ConnectionState.Disconnected) {
-            captureAdapter.release()
-            onDisconnect()
+        when (uiState.connectionState) {
+            is ConnectionState.Pairing,
+            is ConnectionState.Connected,
+            is ConnectionState.Streaming -> {
+                hasActiveSession = true
+            }
+            is ConnectionState.Disconnected -> {
+                if (hasActiveSession) {
+                    captureAdapter.release()
+                    onDisconnect()
+                }
+            }
+            else -> {}
         }
     }
 
@@ -139,14 +152,14 @@ fun CameraScreen(
         onDisconnect()
     }
 
-    // Start session on entry
+    // Start session on entry: initialize message listeners before network handshake
     LaunchedEffect(config) {
+        viewModel.startSession(config)
         streamAdapter.connect(
             host = config.host,
             port = config.port,
             sessionToken = config.sessionToken
         )
-        viewModel.startSession(config)
     }
 
     var previewViewRef by remember { mutableStateOf<PreviewView?>(null) }

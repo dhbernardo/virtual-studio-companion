@@ -43,13 +43,17 @@ class CameraStreamViewModel(
     private val telemetryEmitter: ITelemetryEmitter,
     private val commandDispatcher: CameraCommandDispatcher = CameraCommandDispatcher(),
     val hasFlashUnit: Boolean = true,
+    val initialConfig: PairingConfig? = null,
     private val onApplyZoom: ((Float) -> Boolean)? = null,
     private val onToggleTorch: ((Boolean) -> Boolean)? = null,
     private val onSetFps: ((Int) -> Unit)? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
-        CameraUiState(hasFlashUnit = hasFlashUnit)
+        CameraUiState(
+            connectionState = if (initialConfig != null) ConnectionState.Pairing(initialConfig) else ConnectionState.Disconnected,
+            hasFlashUnit = hasFlashUnit
+        )
     )
     val uiState: StateFlow<CameraUiState> = _uiState.asStateFlow()
 
